@@ -16,6 +16,8 @@ interface StageGroupProps {
   onMoveStageDown?: (stageId: string) => void;
   canMoveStageUp?: boolean;
   canMoveStageDown?: boolean;
+  isExpanded?: boolean;
+  onToggleExpand?: (stageId: string) => void;
 }
 
 const StageGroupCard = styled(Card)`
@@ -39,6 +41,13 @@ const StageHeader = styled.div`
   background: ${({ theme }) => theme.colors.white};
   border-radius: ${({ theme }) => theme.borderRadius.md};
   border-left: 4px solid ${({ theme }) => theme.colors.primary};
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s ease;
+  
+  &:hover {
+    background-color: ${({ theme }) => theme.colors.lightGray};
+  }
   
   @media (min-width: ${({ theme }) => theme.breakpoints.tablet}) {
     padding: ${({ theme }) => theme.spacing.md};
@@ -53,9 +62,11 @@ const StageHeaderLeft = styled.div`
   min-width: 0;
 `;
 
-const StageIcon = styled.div`
+const StageIcon = styled.div<{ $isExpanded: boolean }>`
   font-size: 1.25rem;
   flex-shrink: 0;
+  transition: transform ${({ theme }) => theme.transitions.normal};
+  transform: ${({ $isExpanded }) => ($isExpanded ? 'rotate(90deg)' : 'rotate(0deg)')};
 `;
 
 const StageInfo = styled.div`
@@ -94,8 +105,8 @@ const StageHeaderActions = styled.div`
   z-index: 10;
 `;
 
-const StageItemsList = styled.div`
-  display: flex;
+const StageItemsList = styled.div<{ $isExpanded: boolean }>`
+  display: ${({ $isExpanded }) => ($isExpanded ? 'flex' : 'none')};
   flex-direction: column;
   gap: ${({ theme }) => theme.spacing.xs};
 `;
@@ -130,6 +141,8 @@ export const StageGroup: React.FC<StageGroupProps> = ({
   onMoveStageDown,
   canMoveStageUp = false,
   canMoveStageDown = false,
+  isExpanded = false,
+  onToggleExpand,
 }) => {
   const stageDuration = items.reduce((sum, item) => sum + item.duration, 0);
   // Используем элементы в исходном порядке (без сортировки)
@@ -145,9 +158,15 @@ export const StageGroup: React.FC<StageGroupProps> = ({
 
   return (
     <StageGroupCard>
-      <StageHeader>
+      <StageHeader
+        onClick={() => {
+          if (onToggleExpand) {
+            onToggleExpand(stageId);
+          }
+        }}
+      >
         <StageHeaderLeft>
-          <StageIcon>📋</StageIcon>
+          <StageIcon $isExpanded={isExpanded}>▶</StageIcon>
           <StageInfo>
             <StageTitle>{stageName}</StageTitle>
             <StageCount>
@@ -156,7 +175,11 @@ export const StageGroup: React.FC<StageGroupProps> = ({
             </StageCount>
           </StageInfo>
         </StageHeaderLeft>
-        <StageHeaderActions>
+        <StageHeaderActions
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
+        >
           {onMoveStageUp && canMoveStageUp && (
             <Button
               variant="secondary"
@@ -193,7 +216,7 @@ export const StageGroup: React.FC<StageGroupProps> = ({
           )}
         </StageHeaderActions>
       </StageHeader>
-      <StageItemsList>
+      <StageItemsList $isExpanded={isExpanded}>
         {sortedItems.map((item, index) => (
           <LessonPlanItemComponent
             key={item.id}

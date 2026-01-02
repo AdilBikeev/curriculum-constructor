@@ -179,6 +179,7 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
   const [items, setItems] = useState<LessonPlanItem[]>([]);
   const [planTitle, setPlanTitle] = useState<string>('');
   const [currentPlanId, setCurrentPlanId] = useState<string | null>(null);
+  const [expandedStages, setExpandedStages] = useState<Set<string>>(new Set());
 
 
   // Используем элементы в том порядке, в котором они были установлены пользователем
@@ -230,6 +231,9 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
       alert('Недостаточно времени для добавления этого упражнения!');
       return;
     }
+
+    // Разворачиваем стадию при добавлении нового элемента
+    setExpandedStages((prev) => new Set(prev).add(stageId));
 
     setItems((prev) => {
       // Находим последний элемент этой стадии в массиве
@@ -345,6 +349,18 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
     return stage?.exercises.find((e) => e.id === exerciseId);
   };
 
+  const handleToggleStage = (stageId: string) => {
+    setExpandedStages((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(stageId)) {
+        newSet.delete(stageId);
+      } else {
+        newSet.add(stageId);
+      }
+      return newSet;
+    });
+  };
+
   const getStageCanMoveUp = (stageId: string): boolean => {
     const stageIndex = stageOrder.indexOf(stageId);
     return stageIndex > 0;
@@ -400,6 +416,8 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
                     onMoveStageDown={handleMoveStageDown}
                     canMoveStageUp={getStageCanMoveUp(stageId)}
                     canMoveStageDown={getStageCanMoveDown(stageId)}
+                    isExpanded={expandedStages.has(stageId)}
+                    onToggleExpand={handleToggleStage}
                   />
                 );
               })}
