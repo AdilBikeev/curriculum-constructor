@@ -144,9 +144,9 @@ export const LessonPlanItemComponent: React.FC<LessonPlanItemProps> = ({
       <ItemContent>
         <OrderNumber>{item.order}</OrderNumber>
         <ItemInfo>
-          <ItemTitle>{item.stageName}</ItemTitle>
+          <ItemTitle>{item.exerciseName}</ItemTitle>
           <ItemSubtitle>
-            {item.exerciseName}
+            {item.stageName}
             <ItemDuration>⏱️ {item.duration} мин</ItemDuration>
           </ItemSubtitle>
         </ItemInfo>

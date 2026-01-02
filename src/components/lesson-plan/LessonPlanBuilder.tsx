@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { LessonPlanItem, LessonStage, Exercise, LessonPlan } from '../../types';
 import { AddExerciseForm } from './AddExerciseForm';
 import { LessonPlanItemComponent } from './LessonPlanItem';
+import { StageGroup } from './StageGroup';
 import { TimeIndicator } from './TimeIndicator';
 import { Card } from '../common/Card';
 import { Button } from '../common/Button';
@@ -10,8 +11,10 @@ import {
   calculateTotalDuration,
   createLessonPlanItem,
   canAddExercise,
-  moveItemUp,
-  moveItemDown,
+  moveExerciseInStageUp,
+  moveExerciseInStageDown,
+  moveStageUp,
+  moveStageDown,
   reorderItems,
 } from '../../utils/lessonPlan';
 import {
@@ -210,10 +213,35 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
     return () => clearTimeout(timeoutId);
   }, [items, planTitle, currentPlanId]);
 
-  // Всегда храним элементы отсортированными по order
+  // Используем элементы в том порядке, в котором они были установлены пользователем
   const sortedItems = useMemo(() => {
-    return [...items].sort((a, b) => a.order - b.order);
+    return [...items];
   }, [items]);
+
+  // Группируем элементы по стадиям
+  const groupedByStage = useMemo(() => {
+    const groups: { [stageId: string]: LessonPlanItem[] } = {};
+    sortedItems.forEach((item) => {
+      if (!groups[item.stageId]) {
+        groups[item.stageId] = [];
+      }
+      groups[item.stageId].push(item);
+    });
+    return groups;
+  }, [sortedItems]);
+
+  // Получаем порядок стадий (по первому элементу каждой стадии)
+  const stageOrder = useMemo(() => {
+    const order: string[] = [];
+    const seen = new Set<string>();
+    sortedItems.forEach((item) => {
+      if (!seen.has(item.stageId)) {
+        order.push(item.stageId);
+        seen.add(item.stageId);
+      }
+    });
+    return order;
+  }, [sortedItems]);
 
   const totalDuration = useMemo(() => calculateTotalDuration(items), [items]);
   const isOverTime = totalDuration > 90;
@@ -238,16 +266,30 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
     setItems((prev) => reorderItems(prev.filter((item) => item.id !== id)));
   };
 
-  const handleMoveUp = React.useCallback((id: string) => {
+  const handleMoveExerciseUp = React.useCallback((id: string) => {
     setItems((prev) => {
-      const result = moveItemUp(prev, id);
+      const result = moveExerciseInStageUp(prev, id);
       return result;
     });
   }, []);
 
-  const handleMoveDown = React.useCallback((id: string) => {
+  const handleMoveExerciseDown = React.useCallback((id: string) => {
     setItems((prev) => {
-      const result = moveItemDown(prev, id);
+      const result = moveExerciseInStageDown(prev, id);
+      return result;
+    });
+  }, []);
+
+  const handleMoveStageUp = React.useCallback((stageId: string) => {
+    setItems((prev) => {
+      const result = moveStageUp(prev, stageId);
+      return result;
+    });
+  }, []);
+
+  const handleMoveStageDown = React.useCallback((stageId: string) => {
+    setItems((prev) => {
+      const result = moveStageDown(prev, stageId);
       return result;
     });
   }, []);
@@ -310,6 +352,16 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
     return stage?.exercises.find((e) => e.id === exerciseId);
   };
 
+  const getStageCanMoveUp = (stageId: string): boolean => {
+    const stageIndex = stageOrder.indexOf(stageId);
+    return stageIndex > 0;
+  };
+
+  const getStageCanMoveDown = (stageId: string): boolean => {
+    const stageIndex = stageOrder.indexOf(stageId);
+    return stageIndex >= 0 && stageIndex < stageOrder.length - 1;
+  };
+
   return (
     <BuilderContainer>
       <MainContent>
@@ -335,17 +387,29 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
             </EmptyState>
           ) : (
             <PlanList>
-              {sortedItems.map((item, index) => (
-                <LessonPlanItemComponent
-                  key={item.id}
-                  item={item}
-                  onRemove={handleRemoveItem}
-                  onMoveUp={handleMoveUp}
-                  onMoveDown={handleMoveDown}
-                  canMoveUp={index > 0}
-                  canMoveDown={index < sortedItems.length - 1}
-                />
-              ))}
+              {stageOrder.map((stageId) => {
+                const stageItems = groupedByStage[stageId] || [];
+                if (stageItems.length === 0) return null;
+                
+                const stage = stages.find((s) => s.id === stageId);
+                const stageName = stage?.name || stageItems[0].stageName;
+
+                return (
+                  <StageGroup
+                    key={stageId}
+                    stageId={stageId}
+                    stageName={stageName}
+                    items={stageItems}
+                    onRemoveItem={handleRemoveItem}
+                    onMoveExerciseUp={handleMoveExerciseUp}
+                    onMoveExerciseDown={handleMoveExerciseDown}
+                    onMoveStageUp={handleMoveStageUp}
+                    onMoveStageDown={handleMoveStageDown}
+                    canMoveStageUp={getStageCanMoveUp(stageId)}
+                    canMoveStageDown={getStageCanMoveDown(stageId)}
+                  />
+                );
+              })}
             </PlanList>
           )}
         </CompactCard>
