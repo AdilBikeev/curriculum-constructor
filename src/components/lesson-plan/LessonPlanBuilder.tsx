@@ -18,10 +18,7 @@ import {
   reorderItems,
 } from '../../utils/lessonPlan';
 import {
-  saveLessonPlan,
-  loadCurrentLessonPlan,
   createLessonPlanFromItems,
-  clearCurrentLessonPlan,
 } from '../../utils/storage';
 import { ImportExportPanel } from './ImportExportPanel';
 
@@ -183,35 +180,6 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
   const [planTitle, setPlanTitle] = useState<string>('');
   const [currentPlanId, setCurrentPlanId] = useState<string | null>(null);
 
-  // Загружаем сохраненный план при монтировании
-  useEffect(() => {
-    const savedPlan = loadCurrentLessonPlan();
-    if (savedPlan && savedPlan.items.length > 0) {
-      setItems(savedPlan.items);
-      setPlanTitle(savedPlan.title);
-      setCurrentPlanId(savedPlan.id);
-    }
-  }, []);
-
-  // Автосохранение при изменении элементов (с задержкой)
-  useEffect(() => {
-    if (items.length === 0) return;
-
-    const timeoutId = setTimeout(() => {
-      const plan = createLessonPlanFromItems(items, planTitle || undefined);
-      
-      // Сохраняем ID плана, если он уже существует
-      if (currentPlanId) {
-        plan.id = currentPlanId;
-      } else {
-        setCurrentPlanId(plan.id);
-      }
-      
-      saveLessonPlan(plan);
-    }, 1000); // Автосохранение через 1 секунду после последнего изменения
-
-    return () => clearTimeout(timeoutId);
-  }, [items, planTitle, currentPlanId]);
 
   // Используем элементы в том порядке, в котором они были установлены пользователем
   const sortedItems = useMemo(() => {
@@ -227,7 +195,12 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
       }
       groups[item.stageId].push(item);
     });
-    return groups;
+    // Создаем новые массивы для каждой группы, чтобы React видел изменения
+    const newGroups: { [stageId: string]: LessonPlanItem[] } = {};
+    Object.keys(groups).forEach((stageId) => {
+      newGroups[stageId] = [...groups[stageId]];
+    });
+    return newGroups;
   }, [sortedItems]);
 
   // Получаем порядок стадий (по первому элементу каждой стадии)
@@ -258,8 +231,27 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
       return;
     }
 
-    const newItem = createLessonPlanItem(stage, exercise, items.length + 1);
-    setItems((prev) => [...prev, newItem]);
+    setItems((prev) => {
+      // Находим последний элемент этой стадии в массиве
+      let insertIndex = prev.length;
+      for (let i = prev.length - 1; i >= 0; i--) {
+        if (prev[i].stageId === stageId) {
+          insertIndex = i + 1;
+          break;
+        }
+      }
+      
+      // Если стадии нет в списке, добавляем в конец
+      const newItem = createLessonPlanItem(stage, exercise, insertIndex + 1);
+      const newItems = [
+        ...prev.slice(0, insertIndex),
+        newItem,
+        ...prev.slice(insertIndex),
+      ];
+      
+      // Пересчитываем order для всех элементов
+      return reorderItems(newItems);
+    });
   };
 
   const handleRemoveItem = (id: string) => {
@@ -269,6 +261,7 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
   const handleMoveExerciseUp = React.useCallback((id: string) => {
     setItems((prev) => {
       const result = moveExerciseInStageUp(prev, id);
+      // Убеждаемся, что возвращаем новый массив (для React)
       return result;
     });
   }, []);
@@ -276,6 +269,7 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
   const handleMoveExerciseDown = React.useCallback((id: string) => {
     setItems((prev) => {
       const result = moveExerciseInStageDown(prev, id);
+      // Убеждаемся, что возвращаем новый массив (для React)
       return result;
     });
   }, []);
@@ -313,13 +307,11 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
     } else {
       setCurrentPlanId(plan.id);
     }
-    
-    saveLessonPlan(plan);
 
     if (onSave) {
       onSave(items);
     } else {
-      alert(`✅ План урока "${plan.title}" успешно сохранен!`);
+      alert(`✅ План урока "${plan.title}" готов к экспорту! Используйте панель импорта/экспорта для сохранения.`);
     }
   };
 
@@ -328,12 +320,13 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
       setItems([]);
       setPlanTitle('');
       setCurrentPlanId(null);
-      clearCurrentLessonPlan();
     }
   };
 
   const handlePlanImported = (plan: LessonPlan) => {
-    setItems(plan.items);
+    // Пересчитываем order согласно порядку элементов в массиве
+    const reorderedItems = reorderItems(plan.items);
+    setItems(reorderedItems);
     setPlanTitle(plan.title);
     setCurrentPlanId(plan.id);
   };
@@ -440,11 +433,6 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
           <Button variant="secondary" onClick={handleClear} disabled={items.length === 0} size="sm">
             🗑️ Очистить план
           </Button>
-          {items.length > 0 && (
-            <AutoSaveIndicator>
-              💾 Автосохранение включено
-            </AutoSaveIndicator>
-          )}
         </ActionsCard>
 
         <ImportExportPanel

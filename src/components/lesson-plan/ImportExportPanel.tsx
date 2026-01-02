@@ -8,7 +8,6 @@ import {
   exportLessonPlanToFile,
   importLessonPlanFromString,
   importLessonPlanFromFile,
-  saveLessonPlan,
 } from '../../utils/storage';
 
 interface ImportExportPanelProps {
@@ -136,7 +135,6 @@ export const ImportExportPanel: React.FC<ImportExportPanelProps> = ({
     try {
       const plan = importLessonPlanFromString(importString);
       if (plan) {
-        saveLessonPlan(plan);
         onPlanImported(plan);
         setMessage({ type: 'success', text: 'План успешно импортирован!' });
         setImportString('');
@@ -156,7 +154,6 @@ export const ImportExportPanel: React.FC<ImportExportPanelProps> = ({
     try {
       const plan = await importLessonPlanFromFile(file);
       if (plan) {
-        saveLessonPlan(plan);
         onPlanImported(plan);
         setMessage({ type: 'success', text: 'План успешно импортирован из файла!' });
         setTimeout(() => setMessage(null), 3000);

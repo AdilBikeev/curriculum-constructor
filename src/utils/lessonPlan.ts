@@ -37,40 +37,44 @@ export const reorderItems = (items: LessonPlanItem[]): LessonPlanItem[] => {
 };
 
 export const moveItemUp = (items: LessonPlanItem[], itemId: string): LessonPlanItem[] => {
-  // Сначала сортируем по order, чтобы убедиться, что порядок правильный
-  const sortedItems = [...items].sort((a, b) => a.order - b.order);
-  const index = sortedItems.findIndex((item) => item.id === itemId);
+  const itemIndex = items.findIndex((item) => item.id === itemId);
   
-  if (index <= 0) {
-    // Возвращаем новый массив даже если ничего не изменилось
-    return sortedItems.map(item => ({ ...item }));
+  if (itemIndex <= 0) {
+    return reorderItems([...items]);
   }
 
-  // Меняем местами элементы
-  const newItems = [...sortedItems];
-  const temp = newItems[index - 1];
-  newItems[index - 1] = newItems[index];
-  newItems[index] = temp;
+  const item = items[itemIndex];
+  const prevItem = items[itemIndex - 1];
+
+  // Создаем новый массив с переставленными элементами
+  const newItems = [
+    ...items.slice(0, itemIndex - 1),
+    item,
+    prevItem,
+    ...items.slice(itemIndex + 1),
+  ];
   
   // Пересчитываем порядок
   return reorderItems(newItems);
 };
 
 export const moveItemDown = (items: LessonPlanItem[], itemId: string): LessonPlanItem[] => {
-  // Сначала сортируем по order, чтобы убедиться, что порядок правильный
-  const sortedItems = [...items].sort((a, b) => a.order - b.order);
-  const index = sortedItems.findIndex((item) => item.id === itemId);
+  const itemIndex = items.findIndex((item) => item.id === itemId);
   
-  if (index < 0 || index >= sortedItems.length - 1) {
-    // Возвращаем новый массив даже если ничего не изменилось
-    return sortedItems.map(item => ({ ...item }));
+  if (itemIndex < 0 || itemIndex >= items.length - 1) {
+    return reorderItems([...items]);
   }
 
-  // Меняем местами элементы
-  const newItems = [...sortedItems];
-  const temp = newItems[index];
-  newItems[index] = newItems[index + 1];
-  newItems[index + 1] = temp;
+  const item = items[itemIndex];
+  const nextItem = items[itemIndex + 1];
+
+  // Создаем новый массив с переставленными элементами
+  const newItems = [
+    ...items.slice(0, itemIndex),
+    nextItem,
+    item,
+    ...items.slice(itemIndex + 2),
+  ];
   
   // Пересчитываем порядок
   return reorderItems(newItems);
@@ -95,9 +99,10 @@ export const moveExerciseInStageUp = (items: LessonPlanItem[], itemId: string): 
     return reorderItems(newItems);
   }
 
-  // Меняем местами элементы
-  newItems[itemIndex - 1] = item;
-  newItems[itemIndex] = prevItem;
+  // Меняем местами элементы через splice (как в moveStageUp)
+  const temp = newItems[itemIndex - 1];
+  newItems[itemIndex - 1] = newItems[itemIndex];
+  newItems[itemIndex] = temp;
   
   // Пересчитываем порядок
   return reorderItems(newItems);
@@ -122,9 +127,10 @@ export const moveExerciseInStageDown = (items: LessonPlanItem[], itemId: string)
     return reorderItems(newItems);
   }
 
-  // Меняем местами элементы
-  newItems[itemIndex] = nextItem;
-  newItems[itemIndex + 1] = item;
+  // Меняем местами элементы через splice (как в moveStageDown)
+  const temp = newItems[itemIndex];
+  newItems[itemIndex] = newItems[itemIndex + 1];
+  newItems[itemIndex + 1] = temp;
   
   // Пересчитываем порядок
   return reorderItems(newItems);
