@@ -18,6 +18,7 @@ interface StageGroupProps {
   canMoveStageDown?: boolean;
   isExpanded?: boolean;
   onToggleExpand?: (stageId: string) => void;
+  onAddExercise?: (stageId: string) => void;
 }
 
 const StageGroupCard = styled(Card)`
@@ -130,6 +131,11 @@ const StageDuration = styled.div`
   }
 `;
 
+const AddExerciseButton = styled(Button)`
+  width: 100%;
+  margin-top: ${({ theme }) => theme.spacing.sm};
+`;
+
 export const StageGroup: React.FC<StageGroupProps> = ({
   stageId,
   stageName,
@@ -143,6 +149,7 @@ export const StageGroup: React.FC<StageGroupProps> = ({
   canMoveStageDown = false,
   isExpanded = false,
   onToggleExpand,
+  onAddExercise,
 }) => {
   const stageDuration = items.reduce((sum, item) => sum + item.duration, 0);
   // Используем элементы в исходном порядке (без сортировки)
@@ -228,6 +235,19 @@ export const StageGroup: React.FC<StageGroupProps> = ({
             canMoveDown={getExerciseCanMoveDown(index)}
           />
         ))}
+        {isExpanded && onAddExercise && (
+          <AddExerciseButton
+            variant="secondary"
+            size="sm"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onAddExercise(stageId);
+            }}
+          >
+            ➕ Добавить упражнение
+          </AddExerciseButton>
+        )}
       </StageItemsList>
     </StageGroupCard>
   );

@@ -1,7 +1,9 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import styled from 'styled-components';
 import { LessonPlanItem, LessonStage, Exercise, LessonPlan } from '../../types';
-import { AddExerciseForm } from './AddExerciseForm';
+import { StageSelectionModal } from './StageSelectionModal';
+import { AddExerciseToStageModal } from './AddExerciseToStageModal';
+import { AddStageButton } from './AddStageButton';
 import { LessonPlanItemComponent } from './LessonPlanItem';
 import { StageGroup } from './StageGroup';
 import { TimeIndicator } from './TimeIndicator';
@@ -180,7 +182,11 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
   const [planTitle, setPlanTitle] = useState<string>('');
   const [currentPlanId, setCurrentPlanId] = useState<string | null>(null);
   const [expandedStages, setExpandedStages] = useState<Set<string>>(new Set());
-
+  const [planStageOrder, setPlanStageOrder] = useState<string[]>([]);
+  const [isStageModalOpen, setIsStageModalOpen] = useState(false);
+  const [isAddExerciseToStageModalOpen, setIsAddExerciseToStageModalOpen] = useState(false);
+  const [stageModalPosition, setStageModalPosition] = useState<'top' | 'bottom'>('bottom');
+  const [addExerciseToStageModalStageId, setAddExerciseToStageModalStageId] = useState<string | null>(null);
 
   // Используем элементы в том порядке, в котором они были установлены пользователем
   const sortedItems = useMemo(() => {
@@ -204,22 +210,110 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
     return newGroups;
   }, [sortedItems]);
 
-  // Получаем порядок стадий (по первому элементу каждой стадии)
+  // Получаем порядок стадий (объединяем стадии из плана и из items)
   const stageOrder = useMemo(() => {
     const order: string[] = [];
     const seen = new Set<string>();
+    
+    // Сначала добавляем стадии из planStageOrder
+    planStageOrder.forEach((stageId) => {
+      if (!seen.has(stageId)) {
+        order.push(stageId);
+        seen.add(stageId);
+      }
+    });
+    
+    // Затем добавляем стадии из items, которых еще нет в порядке
     sortedItems.forEach((item) => {
       if (!seen.has(item.stageId)) {
         order.push(item.stageId);
         seen.add(item.stageId);
       }
     });
+    
     return order;
-  }, [sortedItems]);
+  }, [sortedItems, planStageOrder]);
 
   const totalDuration = useMemo(() => calculateTotalDuration(items), [items]);
   const isOverTime = totalDuration > 90;
   const isNearLimit = totalDuration > 80 && totalDuration <= 90;
+
+  const handleAddStageClick = (position: 'top' | 'bottom') => {
+    setStageModalPosition(position);
+    setIsStageModalOpen(true);
+  };
+
+  const handleStageSelected = (stageId: string) => {
+    // Добавляем стадию в план (пустую)
+    setPlanStageOrder((prev) => {
+      const newOrder = [...prev];
+      if (stageModalPosition === 'top') {
+        newOrder.unshift(stageId);
+      } else {
+        newOrder.push(stageId);
+      }
+      return newOrder;
+    });
+    
+    // Разворачиваем стадию при добавлении
+    setExpandedStages((prev) => new Set(prev).add(stageId));
+    
+    setIsStageModalOpen(false);
+  };
+
+
+  const handleAddExerciseToExistingStage = (stageId: string) => {
+    setAddExerciseToStageModalStageId(stageId);
+    setIsAddExerciseToStageModalOpen(true);
+  };
+
+  const handleAddExerciseToStageFromModal = (exerciseId: string) => {
+    if (!addExerciseToStageModalStageId) return;
+    
+    const stage = stages.find((s) => s.id === addExerciseToStageModalStageId);
+    const exercise = stage?.exercises.find((e) => e.id === exerciseId);
+
+    if (!stage || !exercise) return;
+
+    if (!canAddExercise(totalDuration, exercise.duration)) {
+      alert('Недостаточно времени для добавления этого упражнения!');
+      return;
+    }
+
+    // Разворачиваем стадию при добавлении нового элемента
+    setExpandedStages((prev) => new Set(prev).add(addExerciseToStageModalStageId));
+
+    setItems((prev) => {
+      // Находим последний элемент этой стадии в массиве
+      let insertIndex = prev.length;
+      for (let i = prev.length - 1; i >= 0; i--) {
+        if (prev[i].stageId === addExerciseToStageModalStageId) {
+          insertIndex = i + 1;
+          break;
+        }
+      }
+      
+      const newItem = createLessonPlanItem(stage, exercise, insertIndex + 1);
+      const newItems = [
+        ...prev.slice(0, insertIndex),
+        newItem,
+        ...prev.slice(insertIndex),
+      ];
+      
+      // Пересчитываем order для всех элементов
+      return reorderItems(newItems);
+    });
+
+    setAddExerciseToStageModalStageId(null);
+    setIsAddExerciseToStageModalOpen(false);
+  };
+
+  const handleRemoveStage = (stageId: string) => {
+    // Удаляем все элементы этой стадии
+    setItems((prev) => reorderItems(prev.filter((item) => item.stageId !== stageId)));
+    // Удаляем стадию из порядка
+    setPlanStageOrder((prev) => prev.filter((id) => id !== stageId));
+  };
 
   const handleAddExercise = (stageId: string, exerciseId: string) => {
     const stage = stages.find((s) => s.id === stageId);
@@ -245,7 +339,6 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
         }
       }
       
-      // Если стадии нет в списке, добавляем в конец
       const newItem = createLessonPlanItem(stage, exercise, insertIndex + 1);
       const newItems = [
         ...prev.slice(0, insertIndex),
@@ -259,7 +352,15 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
   };
 
   const handleRemoveItem = (id: string) => {
-    setItems((prev) => reorderItems(prev.filter((item) => item.id !== id)));
+    setItems((prev) => {
+      const itemToRemove = prev.find((item) => item.id === id);
+      const newItems = reorderItems(prev.filter((item) => item.id !== id));
+      
+      // Если это был последний элемент стадии, стадию не удаляем из порядка
+      // (стадия остается пустой, что допустимо)
+      
+      return newItems;
+    });
   };
 
   const handleMoveExerciseUp = React.useCallback((id: string) => {
@@ -324,6 +425,8 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
       setItems([]);
       setPlanTitle('');
       setCurrentPlanId(null);
+      setPlanStageOrder([]);
+      setExpandedStages(new Set());
     }
   };
 
@@ -336,7 +439,7 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
   };
 
   const getCurrentPlan = (): LessonPlan | null => {
-    if (items.length === 0) return null;
+    if (items.length === 0 && stageOrder.length === 0) return null;
     const plan = createLessonPlanFromItems(items, planTitle || undefined);
     if (currentPlanId) {
       plan.id = currentPlanId;
@@ -374,8 +477,6 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
   return (
     <BuilderContainer>
       <MainContent>
-        <AddExerciseForm stages={stages} onAdd={handleAddExercise} disabled={isOverTime} />
-
         <CompactCard>
           <SectionTitle>📋 План урока</SectionTitle>
           {items.length > 0 && (
@@ -386,22 +487,22 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
               onChange={(e) => setPlanTitle(e.target.value)}
             />
           )}
-          {items.length === 0 ? (
+          {stageOrder.length === 0 ? (
             <EmptyState>
               <EmptyIcon>📝</EmptyIcon>
               <EmptyTitle>План урока пуст</EmptyTitle>
               <EmptyDescription>
-                Выберите стадию и упражнение из формы выше, чтобы начать формировать план
+                Нажмите кнопку "Добавить стадию" ниже, чтобы начать формировать план
               </EmptyDescription>
+              <AddStageButton onClick={() => handleAddStageClick('bottom')} disabled={isOverTime} />
             </EmptyState>
           ) : (
             <PlanList>
+              <AddStageButton onClick={() => handleAddStageClick('top')} disabled={isOverTime} />
               {stageOrder.map((stageId) => {
                 const stageItems = groupedByStage[stageId] || [];
-                if (stageItems.length === 0) return null;
-                
                 const stage = stages.find((s) => s.id === stageId);
-                const stageName = stage?.name || stageItems[0].stageName;
+                const stageName = stage?.name || (stageItems.length > 0 ? stageItems[0].stageName : 'Неизвестная стадия');
 
                 return (
                   <StageGroup
@@ -418,9 +519,11 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
                     canMoveStageDown={getStageCanMoveDown(stageId)}
                     isExpanded={expandedStages.has(stageId)}
                     onToggleExpand={handleToggleStage}
+                    onAddExercise={handleAddExerciseToExistingStage}
                   />
                 );
               })}
+              <AddStageButton onClick={() => handleAddStageClick('bottom')} disabled={isOverTime} />
             </PlanList>
           )}
         </CompactCard>
@@ -445,10 +548,10 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
         </CompactCard>
 
         <ActionsCard>
-          <Button onClick={handleSave} disabled={items.length === 0 || isOverTime} size="sm">
+          <Button onClick={handleSave} disabled={stageOrder.length === 0 || isOverTime} size="sm">
             💾 Сохранить план
           </Button>
-          <Button variant="secondary" onClick={handleClear} disabled={items.length === 0} size="sm">
+          <Button variant="secondary" onClick={handleClear} disabled={stageOrder.length === 0} size="sm">
             🗑️ Очистить план
           </Button>
         </ActionsCard>
@@ -458,6 +561,25 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
           onPlanImported={handlePlanImported}
         />
       </Sidebar>
+
+      <StageSelectionModal
+        stages={stages}
+        isOpen={isStageModalOpen}
+        onClose={() => setIsStageModalOpen(false)}
+        onSelect={handleStageSelected}
+      />
+
+      {addExerciseToStageModalStageId && (
+        <AddExerciseToStageModal
+          stage={stages.find((s) => s.id === addExerciseToStageModalStageId)!}
+          isOpen={isAddExerciseToStageModalOpen}
+          onClose={() => {
+            setIsAddExerciseToStageModalOpen(false);
+            setAddExerciseToStageModalStageId(null);
+          }}
+          onSelect={handleAddExerciseToStageFromModal}
+        />
+      )}
     </BuilderContainer>
   );
 };
