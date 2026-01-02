@@ -14,7 +14,8 @@ export const GlobalStyle = createGlobalStyle`
   body {
     font-family: ${({ theme }) => theme.fonts.primary};
     color: ${({ theme }) => theme.colors.dark};
-    background-color: ${({ theme }) => theme.colors.light};
+    background: linear-gradient(135deg, ${({ theme }) => theme.colors.light} 0%, ${({ theme }) => theme.colors.lightGray} 100%);
+    background-attachment: fixed;
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
