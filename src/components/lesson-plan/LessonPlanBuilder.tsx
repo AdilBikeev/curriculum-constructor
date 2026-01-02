@@ -1,6 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import styled from 'styled-components';
-import { LessonPlanItem, LessonStage, Exercise } from '../../types';
+import { LessonPlanItem, LessonStage, Exercise, LessonPlan } from '../../types';
 import { AddExerciseForm } from './AddExerciseForm';
 import { LessonPlanItemComponent } from './LessonPlanItem';
 import { TimeIndicator } from './TimeIndicator';
@@ -14,6 +14,13 @@ import {
   moveItemDown,
   reorderItems,
 } from '../../utils/lessonPlan';
+import {
+  saveLessonPlan,
+  loadCurrentLessonPlan,
+  createLessonPlanFromItems,
+  clearCurrentLessonPlan,
+} from '../../utils/storage';
+import { ImportExportPanel } from './ImportExportPanel';
 
 interface LessonPlanBuilderProps {
   stages: LessonStage[];
@@ -97,6 +104,15 @@ const ActionsCard = styled(Card)`
   }
 `;
 
+const AutoSaveIndicator = styled.div`
+  font-size: 0.75rem;
+  color: ${({ theme }) => theme.colors.secondary};
+  text-align: center;
+  padding-top: ${({ theme }) => theme.spacing.sm};
+  border-top: 1px solid ${({ theme }) => theme.colors.gray};
+  margin-top: ${({ theme }) => theme.spacing.xs};
+`;
+
 const CompactCard = styled(Card)`
   padding: ${({ theme }) => theme.spacing.md} !important;
 
@@ -126,6 +142,23 @@ const CompactSectionTitle = styled(SectionTitle)`
   margin-bottom: ${({ theme }) => theme.spacing.md};
 `;
 
+const PlanTitleInput = styled.input`
+  padding: ${({ theme }) => theme.spacing.sm} ${({ theme }) => theme.spacing.md};
+  border: 2px solid ${({ theme }) => theme.colors.gray};
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  font-size: 0.9375rem;
+  font-family: inherit;
+  transition: all ${({ theme }) => theme.transitions.normal};
+  background-color: ${({ theme }) => theme.colors.white};
+  width: 100%;
+
+  &:focus {
+    outline: none;
+    border-color: ${({ theme }) => theme.colors.primary};
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  }
+`;
+
 const WarningMessage = styled.div<{ $isError: boolean }>`
   padding: ${({ theme }) => theme.spacing.sm};
   border-radius: ${({ theme }) => theme.borderRadius.lg};
@@ -144,6 +177,38 @@ const WarningMessage = styled.div<{ $isError: boolean }>`
 
 export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, onSave }) => {
   const [items, setItems] = useState<LessonPlanItem[]>([]);
+  const [planTitle, setPlanTitle] = useState<string>('');
+  const [currentPlanId, setCurrentPlanId] = useState<string | null>(null);
+
+  // Загружаем сохраненный план при монтировании
+  useEffect(() => {
+    const savedPlan = loadCurrentLessonPlan();
+    if (savedPlan && savedPlan.items.length > 0) {
+      setItems(savedPlan.items);
+      setPlanTitle(savedPlan.title);
+      setCurrentPlanId(savedPlan.id);
+    }
+  }, []);
+
+  // Автосохранение при изменении элементов (с задержкой)
+  useEffect(() => {
+    if (items.length === 0) return;
+
+    const timeoutId = setTimeout(() => {
+      const plan = createLessonPlanFromItems(items, planTitle || undefined);
+      
+      // Сохраняем ID плана, если он уже существует
+      if (currentPlanId) {
+        plan.id = currentPlanId;
+      } else {
+        setCurrentPlanId(plan.id);
+      }
+      
+      saveLessonPlan(plan);
+    }, 1000); // Автосохранение через 1 секунду после последнего изменения
+
+    return () => clearTimeout(timeoutId);
+  }, [items, planTitle, currentPlanId]);
 
   // Всегда храним элементы отсортированными по order
   const sortedItems = useMemo(() => {
@@ -188,18 +253,56 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
   }, []);
 
   const handleSave = () => {
+    if (items.length === 0) {
+      alert('Нечего сохранять! Добавьте упражнения в план урока.');
+      return;
+    }
+
+    if (isOverTime) {
+      alert('Нельзя сохранить план урока с превышенным временем!');
+      return;
+    }
+
+    const plan = createLessonPlanFromItems(items, planTitle || undefined);
+    
+    // Сохраняем ID плана, если он уже существует
+    if (currentPlanId) {
+      plan.id = currentPlanId;
+    } else {
+      setCurrentPlanId(plan.id);
+    }
+    
+    saveLessonPlan(plan);
+
     if (onSave) {
       onSave(items);
     } else {
-      console.log('План урока:', items);
-      alert('План урока сохранен! (в консоли)');
+      alert(`✅ План урока "${plan.title}" успешно сохранен!`);
     }
   };
 
   const handleClear = () => {
-    if (confirm('Вы уверены, что хотите очистить план урока?')) {
+    if (confirm('Вы уверены, что хотите очистить план урока? Все несохраненные изменения будут потеряны.')) {
       setItems([]);
+      setPlanTitle('');
+      setCurrentPlanId(null);
+      clearCurrentLessonPlan();
     }
+  };
+
+  const handlePlanImported = (plan: LessonPlan) => {
+    setItems(plan.items);
+    setPlanTitle(plan.title);
+    setCurrentPlanId(plan.id);
+  };
+
+  const getCurrentPlan = (): LessonPlan | null => {
+    if (items.length === 0) return null;
+    const plan = createLessonPlanFromItems(items, planTitle || undefined);
+    if (currentPlanId) {
+      plan.id = currentPlanId;
+    }
+    return plan;
   };
 
   const getExerciseById = (stageId: string, exerciseId: string): Exercise | undefined => {
@@ -214,6 +317,14 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
 
         <CompactCard>
           <SectionTitle>📋 План урока</SectionTitle>
+          {items.length > 0 && (
+            <PlanTitleInput
+              type="text"
+              placeholder="Название плана урока..."
+              value={planTitle}
+              onChange={(e) => setPlanTitle(e.target.value)}
+            />
+          )}
           {items.length === 0 ? (
             <EmptyState>
               <EmptyIcon>📝</EmptyIcon>
@@ -260,12 +371,22 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
 
         <ActionsCard>
           <Button onClick={handleSave} disabled={items.length === 0 || isOverTime} size="sm">
-            Сохранить план
+            💾 Сохранить план
           </Button>
           <Button variant="secondary" onClick={handleClear} disabled={items.length === 0} size="sm">
-            Очистить план
+            🗑️ Очистить план
           </Button>
+          {items.length > 0 && (
+            <AutoSaveIndicator>
+              💾 Автосохранение включено
+            </AutoSaveIndicator>
+          )}
         </ActionsCard>
+
+        <ImportExportPanel
+          currentPlan={getCurrentPlan()}
+          onPlanImported={handlePlanImported}
+        />
       </Sidebar>
     </BuilderContainer>
   );
