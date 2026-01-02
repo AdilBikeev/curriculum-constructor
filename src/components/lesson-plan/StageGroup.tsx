@@ -110,6 +110,26 @@ const StageItemsList = styled.div<{ $isExpanded: boolean }>`
   display: ${({ $isExpanded }) => ($isExpanded ? 'flex' : 'none')};
   flex-direction: column;
   gap: ${({ theme }) => theme.spacing.xs};
+  margin-left: ${({ theme }) => theme.spacing.md};
+  padding-left: ${({ theme }) => theme.spacing.md};
+  border-left: 2px solid ${({ theme }) => theme.colors.gray};
+  position: relative;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    left: -2px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: ${({ theme }) => theme.colors.primaryLight};
+    opacity: 0.3;
+  }
+  
+  @media (min-width: ${({ theme }) => theme.breakpoints.tablet}) {
+    margin-left: ${({ theme }) => theme.spacing.lg};
+    padding-left: ${({ theme }) => theme.spacing.lg};
+  }
 `;
 
 const StageDuration = styled.div`

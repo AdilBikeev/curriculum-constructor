@@ -19,9 +19,11 @@ const ItemCard = styled(Card)`
   gap: ${({ theme }) => theme.spacing.sm};
   margin-bottom: ${({ theme }) => theme.spacing.xs};
   padding: ${({ theme }) => theme.spacing.sm} ${({ theme }) => theme.spacing.md};
-  border-left: 3px solid ${({ theme }) => theme.colors.primary};
+  border-left: 2px solid ${({ theme }) => theme.colors.primaryLight};
+  background-color: ${({ theme }) => theme.colors.white};
   transition: all ${({ theme }) => theme.transitions.normal};
   align-items: center;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 
   @media (min-width: ${({ theme }) => theme.breakpoints.tablet}) {
     padding: ${({ theme }) => theme.spacing.md};
@@ -31,6 +33,7 @@ const ItemCard = styled(Card)`
   &:hover {
     border-left-color: ${({ theme }) => theme.colors.primaryDark};
     box-shadow: ${({ theme }) => theme.shadows.md};
+    background-color: ${({ theme }) => theme.colors.light};
   }
 `;
 
