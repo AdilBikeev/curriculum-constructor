@@ -69,13 +69,16 @@ public class ExerciseService : IExerciseService
             throw new NotFoundException($"Exercise with id {id} not found");
         }
 
-        exercise.Name = request.Name;
-        exercise.Duration = request.Duration;
-        exercise.Description = request.Description;
-        exercise.UpdatedAt = DateTime.UtcNow;
+        var updatedExercise = exercise with
+        {
+            Name = request.Name,
+            Duration = request.Duration,
+            Description = request.Description,
+            UpdatedAt = DateTime.UtcNow
+        };
 
-        await _exerciseRepository.UpdateAsync(exercise);
-        return ExerciseConverter.ToDto(exercise);
+        await _exerciseRepository.UpdateAsync(updatedExercise);
+        return ExerciseConverter.ToDto(updatedExercise);
     }
 
     public async Task<bool> DeleteAsync(string id)

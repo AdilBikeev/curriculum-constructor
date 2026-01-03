@@ -22,7 +22,8 @@ public static class StageConverter
         {
             Id = entity.Id,
             Name = entity.Name,
-            Description = entity.Description
+            Description = entity.Description,
+            Exercises = new List<ExerciseDto>()
         };
     }
 

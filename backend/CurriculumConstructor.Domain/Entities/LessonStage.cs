@@ -3,12 +3,12 @@ namespace CurriculumConstructor.Domain.Entities;
 /// <summary>
 /// Стадия урока
 /// </summary>
-public class LessonStage
+public sealed record LessonStage
 {
-    public string Id { get; set; } = string.Empty;
-    public string Name { get; set; } = string.Empty;
-    public string? Description { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
+    public required string Id { get; init; }
+    public required string Name { get; init; }
+    public string? Description { get; init; }
+    public required DateTime CreatedAt { get; init; }
+    public required DateTime UpdatedAt { get; init; }
 }
 

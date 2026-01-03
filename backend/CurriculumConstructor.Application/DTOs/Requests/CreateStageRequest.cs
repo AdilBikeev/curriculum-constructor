@@ -3,9 +3,9 @@ namespace CurriculumConstructor.Application.DTOs.Requests;
 /// <summary>
 /// Запрос на создание стадии
 /// </summary>
-public class CreateStageRequest
+public sealed record CreateStageRequest
 {
-    public string Name { get; set; } = string.Empty;
-    public string? Description { get; set; }
+    public required string Name { get; init; }
+    public string? Description { get; init; }
 }
 

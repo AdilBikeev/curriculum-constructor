@@ -3,12 +3,12 @@ namespace CurriculumConstructor.Application.DTOs.Responses;
 /// <summary>
 /// DTO упражнения
 /// </summary>
-public class ExerciseDto
+public sealed record ExerciseDto
 {
-    public string Id { get; set; } = string.Empty;
-    public string StageId { get; set; } = string.Empty;
-    public string Name { get; set; } = string.Empty;
-    public int Duration { get; set; }
-    public string? Description { get; set; }
+    public required string Id { get; init; }
+    public required string StageId { get; init; }
+    public required string Name { get; init; }
+    public required int Duration { get; init; }
+    public string? Description { get; init; }
 }
 

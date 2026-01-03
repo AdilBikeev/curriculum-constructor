@@ -3,14 +3,14 @@ namespace CurriculumConstructor.Domain.Entities;
 /// <summary>
 /// Упражнение
 /// </summary>
-public class Exercise
+public sealed record Exercise
 {
-    public string Id { get; set; } = string.Empty;
-    public string StageId { get; set; } = string.Empty;
-    public string Name { get; set; } = string.Empty;
-    public int Duration { get; set; } // в минутах
-    public string? Description { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
+    public required string Id { get; init; }
+    public required string StageId { get; init; }
+    public required string Name { get; init; }
+    public required int Duration { get; init; } // в минутах
+    public string? Description { get; init; }
+    public required DateTime CreatedAt { get; init; }
+    public required DateTime UpdatedAt { get; init; }
 }
 

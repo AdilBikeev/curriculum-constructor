@@ -30,8 +30,10 @@ public class LessonStageService : ILessonStageService
         foreach (var stage in stagesList)
         {
             var exercises = await _exerciseRepository.GetByStageIdAsync(stage.Id);
-            var stageDto = StageConverter.ToDto(stage);
-            stageDto.Exercises = ExerciseConverter.ToDtoCollection(exercises).ToList();
+            var stageDto = StageConverter.ToDto(stage) with
+            {
+                Exercises = ExerciseConverter.ToDtoCollection(exercises).ToList()
+            };
             stagesDto.Add(stageDto);
         }
 
@@ -47,8 +49,10 @@ public class LessonStageService : ILessonStageService
         }
 
         var exercises = await _exerciseRepository.GetByStageIdAsync(id);
-        var stageDto = StageConverter.ToDto(stage);
-        stageDto.Exercises = ExerciseConverter.ToDtoCollection(exercises).ToList();
+        var stageDto = StageConverter.ToDto(stage) with
+        {
+            Exercises = ExerciseConverter.ToDtoCollection(exercises).ToList()
+        };
         
         return stageDto;
     }
@@ -66,8 +70,10 @@ public class LessonStageService : ILessonStageService
 
         await _stageRepository.CreateAsync(stage);
         
-        var stageDto = StageConverter.ToDto(stage);
-        stageDto.Exercises = new List<ExerciseDto>();
+        var stageDto = StageConverter.ToDto(stage) with
+        {
+            Exercises = new List<ExerciseDto>()
+        };
         
         return stageDto;
     }
