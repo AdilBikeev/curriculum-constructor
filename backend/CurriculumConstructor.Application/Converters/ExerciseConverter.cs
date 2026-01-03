@@ -1,3 +1,4 @@
+using System;
 using CurriculumConstructor.Application.DTOs.Responses;
 using CurriculumConstructor.Domain.Entities;
 
@@ -13,10 +14,7 @@ internal static class ExerciseConverter
     /// </summary>
     public static ExerciseDto ToDto(Exercise entity)
     {
-        if (entity == null)
-        {
-            return null!;
-        }
+        ArgumentNullException.ThrowIfNull(entity);
 
         return new ExerciseDto
         {

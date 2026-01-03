@@ -1,3 +1,5 @@
+using System;
+
 namespace CurriculumConstructor.Application.Converters;
 
 /// <summary>
@@ -18,10 +20,8 @@ internal static class Converter
         IEnumerable<TSource> sources,
         Func<TSource, TDestination> converter)
     {
-        if (sources == null)
-        {
-            return Enumerable.Empty<TDestination>();
-        }
+        ArgumentNullException.ThrowIfNull(sources);
+        ArgumentNullException.ThrowIfNull(converter);
 
         return sources.Select(converter);
     }
@@ -39,10 +39,8 @@ internal static class Converter
         Func<TSource, TDestination?> converter)
         where TDestination : class
     {
-        if (sources == null)
-        {
-            return Enumerable.Empty<TDestination>();
-        }
+        ArgumentNullException.ThrowIfNull(sources);
+        ArgumentNullException.ThrowIfNull(converter);
 
         return sources.Select(converter).Where(x => x != null)!;
     }

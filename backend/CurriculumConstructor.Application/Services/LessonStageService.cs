@@ -1,3 +1,4 @@
+using System;
 using CurriculumConstructor.Application.Converters;
 using CurriculumConstructor.Application.DTOs.Requests;
 using CurriculumConstructor.Application.DTOs.Responses;
@@ -16,6 +17,9 @@ internal class LessonStageService : ILessonStageService
 
     public LessonStageService(ILessonStageRepository stageRepository, IExerciseRepository exerciseRepository)
     {
+        ArgumentNullException.ThrowIfNull(stageRepository);
+        ArgumentNullException.ThrowIfNull(exerciseRepository);
+
         _stageRepository = stageRepository;
         _exerciseRepository = exerciseRepository;
     }
@@ -42,6 +46,8 @@ internal class LessonStageService : ILessonStageService
 
     public async Task<StageDto?> GetByIdAsync(string id)
     {
+        ArgumentNullException.ThrowIfNull(id);
+
         var stage = await _stageRepository.GetByIdAsync(id);
         if (stage == null)
         {
@@ -59,6 +65,8 @@ internal class LessonStageService : ILessonStageService
 
     public async Task<StageDto> CreateAsync(CreateStageRequest request)
     {
+        ArgumentNullException.ThrowIfNull(request);
+
         var stage = new Domain.Entities.LessonStage
         {
             Id = Guid.NewGuid().ToString(),
@@ -80,6 +88,8 @@ internal class LessonStageService : ILessonStageService
 
     public async Task<bool> DeleteAsync(string id)
     {
+        ArgumentNullException.ThrowIfNull(id);
+
         var exists = await _stageRepository.ExistsAsync(id);
         if (!exists)
         {

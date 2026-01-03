@@ -1,3 +1,4 @@
+using System;
 using CurriculumConstructor.Application.Converters;
 using CurriculumConstructor.Application.DTOs.Requests;
 using CurriculumConstructor.Application.DTOs.Responses;
@@ -16,12 +17,17 @@ internal class ExerciseService : IExerciseService
 
     public ExerciseService(IExerciseRepository exerciseRepository, ILessonStageRepository stageRepository)
     {
+        ArgumentNullException.ThrowIfNull(exerciseRepository);
+        ArgumentNullException.ThrowIfNull(stageRepository);
+
         _exerciseRepository = exerciseRepository;
         _stageRepository = stageRepository;
     }
 
     public async Task<IEnumerable<ExerciseDto>> GetByStageIdAsync(string stageId)
     {
+        ArgumentNullException.ThrowIfNull(stageId);
+
         var exists = await _stageRepository.ExistsAsync(stageId);
         if (!exists)
         {
@@ -34,12 +40,16 @@ internal class ExerciseService : IExerciseService
 
     public async Task<ExerciseDto?> GetByIdAsync(string id)
     {
+        ArgumentNullException.ThrowIfNull(id);
+
         var exercise = await _exerciseRepository.GetByIdAsync(id);
         return exercise == null ? null : ExerciseConverter.ToDto(exercise);
     }
 
     public async Task<ExerciseDto> CreateAsync(CreateExerciseRequest request)
     {
+        ArgumentNullException.ThrowIfNull(request);
+
         var stageExists = await _stageRepository.ExistsAsync(request.StageId);
         if (!stageExists)
         {
@@ -63,6 +73,9 @@ internal class ExerciseService : IExerciseService
 
     public async Task<ExerciseDto> UpdateAsync(string id, UpdateExerciseRequest request)
     {
+        ArgumentNullException.ThrowIfNull(id);
+        ArgumentNullException.ThrowIfNull(request);
+
         var exercise = await _exerciseRepository.GetByIdAsync(id);
         if (exercise == null)
         {
@@ -83,6 +96,8 @@ internal class ExerciseService : IExerciseService
 
     public async Task<bool> DeleteAsync(string id)
     {
+        ArgumentNullException.ThrowIfNull(id);
+
         var exists = await _exerciseRepository.ExistsAsync(id);
         if (!exists)
         {

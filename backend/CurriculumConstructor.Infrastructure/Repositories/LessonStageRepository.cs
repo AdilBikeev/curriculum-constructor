@@ -16,6 +16,8 @@ internal class LessonStageRepository : BaseRepository<LessonStage, string>, ILes
 
     public override async Task<string> CreateAsync(LessonStage entity, IDbTransaction? transaction = null)
     {
+        ArgumentNullException.ThrowIfNull(entity);
+
         var sql = @"
             INSERT INTO LessonStages (Id, Name, Description, CreatedAt, UpdatedAt)
             VALUES (@Id, @Name, @Description, @CreatedAt, @UpdatedAt)";
@@ -26,6 +28,8 @@ internal class LessonStageRepository : BaseRepository<LessonStage, string>, ILes
 
     public override async Task<bool> UpdateAsync(LessonStage entity, IDbTransaction? transaction = null)
     {
+        ArgumentNullException.ThrowIfNull(entity);
+
         var sql = @"
             UPDATE LessonStages 
             SET Name = @Name, Description = @Description, UpdatedAt = @UpdatedAt

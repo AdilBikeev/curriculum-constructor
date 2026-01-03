@@ -17,8 +17,11 @@ internal abstract class BaseRepository<T, TId> : IRepository<T, TId> where T : c
 
     protected BaseRepository(IDbConnection connection, string tableName, string idColumnName = "Id")
     {
-        Connection = connection ?? throw new ArgumentNullException(nameof(connection));
-        TableName = tableName ?? throw new ArgumentNullException(nameof(tableName));
+        ArgumentNullException.ThrowIfNull(connection);
+        ArgumentNullException.ThrowIfNull(tableName);
+
+        Connection = connection;
+        TableName = tableName;
         IdColumnName = idColumnName;
     }
 

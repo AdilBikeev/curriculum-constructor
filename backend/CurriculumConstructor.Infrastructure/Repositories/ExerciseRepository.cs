@@ -16,6 +16,8 @@ internal class ExerciseRepository : BaseRepository<Exercise, string>, IExerciseR
 
     public override async Task<string> CreateAsync(Exercise entity, IDbTransaction? transaction = null)
     {
+        ArgumentNullException.ThrowIfNull(entity);
+
         var sql = @"
             INSERT INTO Exercises (Id, StageId, Name, Duration, Description, CreatedAt, UpdatedAt)
             VALUES (@Id, @StageId, @Name, @Duration, @Description, @CreatedAt, @UpdatedAt)";
@@ -26,6 +28,8 @@ internal class ExerciseRepository : BaseRepository<Exercise, string>, IExerciseR
 
     public override async Task<bool> UpdateAsync(Exercise entity, IDbTransaction? transaction = null)
     {
+        ArgumentNullException.ThrowIfNull(entity);
+
         var sql = @"
             UPDATE Exercises 
             SET Name = @Name, Duration = @Duration, Description = @Description, UpdatedAt = @UpdatedAt
@@ -37,6 +41,8 @@ internal class ExerciseRepository : BaseRepository<Exercise, string>, IExerciseR
 
     public async Task<IEnumerable<Exercise>> GetByStageIdAsync(string stageId)
     {
+        ArgumentNullException.ThrowIfNull(stageId);
+
         var sql = "SELECT * FROM Exercises WHERE StageId = @StageId ORDER BY CreatedAt";
         return await Connection.QueryAsync<Exercise>(sql, new { StageId = stageId });
     }

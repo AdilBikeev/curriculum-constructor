@@ -1,3 +1,4 @@
+using System;
 using CurriculumConstructor.Application.DTOs.Responses;
 using CurriculumConstructor.Domain.Entities;
 
@@ -13,10 +14,7 @@ internal static class StageConverter
     /// </summary>
     public static StageDto ToDto(LessonStage entity)
     {
-        if (entity == null)
-        {
-            return null!;
-        }
+        ArgumentNullException.ThrowIfNull(entity);
 
         return new StageDto
         {
