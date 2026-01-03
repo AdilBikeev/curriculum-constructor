@@ -89,17 +89,12 @@ const AdminPage: React.FC = () => {
     stages,
     isLoading,
     error,
-    refreshStages,
     addStage,
     deleteStage,
     addExercise,
     updateExercise,
     deleteExercise,
   } = useAdminStages();
-
-  const handleReset = async () => {
-    await refreshStages();
-  };
 
   if (isLoading) {
     return (
@@ -126,9 +121,6 @@ const AdminPage: React.FC = () => {
             <BackLink to="/lesson-plan">
               <Button variant="secondary">← Вернуться к конструктору</Button>
             </BackLink>
-            <Button variant="secondary" onClick={handleReset} disabled={isLoading}>
-              🔄 Обновить данные
-            </Button>
           </HeaderActions>
         </PageHeader>
         {error && <ErrorMessage>Ошибка: {error}</ErrorMessage>}
