@@ -7,7 +7,11 @@ import { Input } from '../common/Input';
 
 interface StageManagerProps {
   stages: LessonStage[];
-  onUpdate: (stages: LessonStage[]) => void;
+  onAddStage: (name: string, description?: string) => Promise<void>;
+  onDeleteStage: (stageId: string) => Promise<void>;
+  onAddExercise: (stageId: string, name: string, duration: number, description?: string) => Promise<void>;
+  onUpdateExercise: (stageId: string, exerciseId: string, name: string, duration: number, description?: string) => Promise<void>;
+  onDeleteExercise: (stageId: string, exerciseId: string) => Promise<void>;
 }
 
 const ManagerContainer = styled.div`
@@ -191,64 +195,88 @@ const AddStageCard = styled(Card)`
   padding: ${({ theme }) => theme.spacing.sm} !important;
 `;
 
-export const StageManager: React.FC<StageManagerProps> = ({ stages, onUpdate }) => {
+export const StageManager: React.FC<StageManagerProps> = ({
+  stages,
+  onAddStage,
+  onDeleteStage,
+  onAddExercise,
+  onUpdateExercise,
+  onDeleteExercise,
+}) => {
   const [editingExerciseId, setEditingExerciseId] = useState<string | null>(null);
   const [editingExerciseData, setEditingExerciseData] = useState<{
     name: string;
     duration: number;
   } | null>(null);
   const [newStageName, setNewStageName] = useState('');
+  const [newStageDescription, setNewStageDescription] = useState('');
   const [newExerciseInputs, setNewExerciseInputs] = useState<Record<string, { name: string; duration: string }>>({});
   const [expandedStages, setExpandedStages] = useState<Set<string>>(new Set());
+  const [isProcessing, setIsProcessing] = useState<Record<string, boolean>>({});
 
-  const handleAddStage = () => {
-    if (!newStageName.trim()) return;
-
-    const newStage: LessonStage = {
-      id: `stage-${Date.now()}`,
-      name: newStageName.trim(),
-      exercises: [],
-    };
-
-    onUpdate([...stages, newStage]);
-    setNewStageName('');
+  const setProcessing = (key: string, value: boolean) => {
+    setIsProcessing((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleDeleteStage = (stageId: string) => {
-    if (confirm('Вы уверены, что хотите удалить эту стадию?')) {
-      onUpdate(stages.filter((s) => s.id !== stageId));
+  const handleAddStage = async () => {
+    if (!newStageName.trim()) return;
+
+    const key = 'add-stage';
+    try {
+      setProcessing(key, true);
+      await onAddStage(newStageName.trim(), newStageDescription.trim() || undefined);
+      setNewStageName('');
+      setNewStageDescription('');
+    } catch (error) {
+      console.error('Error adding stage:', error);
+      alert('Ошибка при добавлении стадии. Попробуйте еще раз.');
+    } finally {
+      setProcessing(key, false);
     }
   };
 
-  const handleAddExercise = (stageId: string) => {
+  const handleDeleteStage = async (stageId: string) => {
+    if (!confirm('Вы уверены, что хотите удалить эту стадию?')) return;
+
+    const key = `delete-stage-${stageId}`;
+    try {
+      setProcessing(key, true);
+      await onDeleteStage(stageId);
+    } catch (error) {
+      console.error('Error deleting stage:', error);
+      alert('Ошибка при удалении стадии. Попробуйте еще раз.');
+    } finally {
+      setProcessing(key, false);
+    }
+  };
+
+  const handleAddExercise = async (stageId: string) => {
     const inputs = newExerciseInputs[stageId];
     if (!inputs || !inputs.name.trim() || !inputs.duration) return;
 
     const duration = parseInt(inputs.duration);
-    if (isNaN(duration) || duration <= 0) return;
+    if (isNaN(duration) || duration <= 0) {
+      alert('Длительность должна быть положительным числом');
+      return;
+    }
 
-    const newExercise: Exercise = {
-      id: `ex-${Date.now()}`,
-      name: inputs.name.trim(),
-      duration,
-    };
-
-    onUpdate(
-      stages.map((stage) =>
-        stage.id === stageId
-          ? { ...stage, exercises: [...stage.exercises, newExercise] }
-          : stage
-      )
-    );
-
-    // Разворачиваем стадию при добавлении нового упражнения
-    setExpandedStages((prev) => new Set(prev).add(stageId));
-
-    // Очищаем поля ввода для этой стадии
-    setNewExerciseInputs((prev) => ({
-      ...prev,
-      [stageId]: { name: '', duration: '' },
-    }));
+    const key = `add-exercise-${stageId}`;
+    try {
+      setProcessing(key, true);
+      await onAddExercise(stageId, inputs.name.trim(), duration);
+      // Разворачиваем стадию при добавлении нового упражнения
+      setExpandedStages((prev) => new Set(prev).add(stageId));
+      // Очищаем поля ввода для этой стадии
+      setNewExerciseInputs((prev) => ({
+        ...prev,
+        [stageId]: { name: '', duration: '' },
+      }));
+    } catch (error) {
+      console.error('Error adding exercise:', error);
+      alert('Ошибка при добавлении упражнения. Попробуйте еще раз.');
+    } finally {
+      setProcessing(key, false);
+    }
   };
 
   const handleToggleStage = (stageId: string) => {
@@ -263,14 +291,19 @@ export const StageManager: React.FC<StageManagerProps> = ({ stages, onUpdate }) 
     });
   };
 
-  const handleDeleteExercise = (stageId: string, exerciseId: string) => {
-    onUpdate(
-      stages.map((stage) =>
-        stage.id === stageId
-          ? { ...stage, exercises: stage.exercises.filter((e) => e.id !== exerciseId) }
-          : stage
-      )
-    );
+  const handleDeleteExercise = async (stageId: string, exerciseId: string) => {
+    if (!confirm('Вы уверены, что хотите удалить это упражнение?')) return;
+
+    const key = `delete-exercise-${exerciseId}`;
+    try {
+      setProcessing(key, true);
+      await onDeleteExercise(stageId, exerciseId);
+    } catch (error) {
+      console.error('Error deleting exercise:', error);
+      alert('Ошибка при удалении упражнения. Попробуйте еще раз.');
+    } finally {
+      setProcessing(key, false);
+    }
   };
 
   const handleStartEdit = (exercise: Exercise) => {
@@ -283,33 +316,31 @@ export const StageManager: React.FC<StageManagerProps> = ({ stages, onUpdate }) 
     setEditingExerciseData(null);
   };
 
-  const handleSaveEdit = (stageId: string, exerciseId: string) => {
+  const handleSaveEdit = async (stageId: string, exerciseId: string) => {
     if (!editingExerciseData) return;
 
     // Validate exercise data before saving
-    if (!editingExerciseData.name.trim()) return;
+    if (!editingExerciseData.name.trim()) {
+      alert('Название упражнения не может быть пустым');
+      return;
+    }
     const duration = editingExerciseData.duration;
-    if (isNaN(duration) || duration <= 0) return;
+    if (isNaN(duration) || duration <= 0) {
+      alert('Длительность должна быть положительным числом');
+      return;
+    }
 
-    onUpdate(
-      stages.map((stage) =>
-        stage.id === stageId
-          ? {
-              ...stage,
-              exercises: stage.exercises.map((ex) =>
-                ex.id === exerciseId
-                  ? {
-                      ...ex,
-                      name: editingExerciseData.name.trim(),
-                      duration,
-                    }
-                  : ex
-              ),
-            }
-          : stage
-      )
-    );
-    handleCancelEdit();
+    const key = `update-exercise-${exerciseId}`;
+    try {
+      setProcessing(key, true);
+      await onUpdateExercise(stageId, exerciseId, editingExerciseData.name.trim(), duration);
+      handleCancelEdit();
+    } catch (error) {
+      console.error('Error updating exercise:', error);
+      alert('Ошибка при обновлении упражнения. Попробуйте еще раз.');
+    } finally {
+      setProcessing(key, false);
+    }
   };
 
   return (
@@ -323,9 +354,17 @@ export const StageManager: React.FC<StageManagerProps> = ({ stages, onUpdate }) 
             onChange={(e) => setNewStageName(e.target.value)}
             placeholder="Например: Разминка"
           />
-          <div style={{ display: 'none' }}></div>
-          <Button onClick={handleAddStage} disabled={!newStageName.trim()}>
-            Добавить стадию
+          <Input
+            label="Описание (необязательно)"
+            value={newStageDescription}
+            onChange={(e) => setNewStageDescription(e.target.value)}
+            placeholder="Описание стадии"
+          />
+          <Button
+            onClick={handleAddStage}
+            disabled={!newStageName.trim() || isProcessing['add-stage']}
+          >
+            {isProcessing['add-stage'] ? 'Добавление...' : 'Добавить стадию'}
           </Button>
         </FormRow>
       </AddStageCard>
@@ -346,8 +385,13 @@ export const StageManager: React.FC<StageManagerProps> = ({ stages, onUpdate }) 
                   e.stopPropagation();
                 }}
               >
-                <Button variant="danger" size="sm" onClick={() => handleDeleteStage(stage.id)}>
-                  Удалить стадию
+                <Button
+                  variant="danger"
+                  size="sm"
+                  onClick={() => handleDeleteStage(stage.id)}
+                  disabled={isProcessing[`delete-stage-${stage.id}`]}
+                >
+                  {isProcessing[`delete-stage-${stage.id}`] ? 'Удаление...' : 'Удалить стадию'}
                 </Button>
               </StageHeaderActions>
             </StageHeader>
@@ -383,10 +427,16 @@ export const StageManager: React.FC<StageManagerProps> = ({ stages, onUpdate }) 
                             size="sm"
                             onClick={() => handleSaveEdit(stage.id, exercise.id)}
                             variant="success"
+                            disabled={isProcessing[`update-exercise-${exercise.id}`]}
                           >
-                            ✓
+                            {isProcessing[`update-exercise-${exercise.id}`] ? '...' : '✓'}
                           </Button>
-                          <Button size="sm" onClick={handleCancelEdit} variant="secondary">
+                          <Button
+                            size="sm"
+                            onClick={handleCancelEdit}
+                            variant="secondary"
+                            disabled={isProcessing[`update-exercise-${exercise.id}`]}
+                          >
                             ✕
                           </Button>
                         </FormRowEdit>
@@ -403,6 +453,7 @@ export const StageManager: React.FC<StageManagerProps> = ({ stages, onUpdate }) 
                           size="sm"
                           variant="secondary"
                           onClick={() => handleStartEdit(exercise)}
+                          disabled={isProcessing[`delete-exercise-${exercise.id}`]}
                         >
                           Редактировать
                         </Button>
@@ -410,8 +461,9 @@ export const StageManager: React.FC<StageManagerProps> = ({ stages, onUpdate }) 
                           size="sm"
                           variant="danger"
                           onClick={() => handleDeleteExercise(stage.id, exercise.id)}
+                          disabled={isProcessing[`delete-exercise-${exercise.id}`]}
                         >
-                          Удалить
+                          {isProcessing[`delete-exercise-${exercise.id}`] ? 'Удаление...' : 'Удалить'}
                         </Button>
                       </ExerciseActionsWrapper>
                     )}
@@ -443,9 +495,13 @@ export const StageManager: React.FC<StageManagerProps> = ({ stages, onUpdate }) 
                 />
                 <Button
                   onClick={() => handleAddExercise(stage.id)}
-                  disabled={!newExerciseInputs[stage.id]?.name?.trim() || !newExerciseInputs[stage.id]?.duration}
+                  disabled={
+                    !newExerciseInputs[stage.id]?.name?.trim() ||
+                    !newExerciseInputs[stage.id]?.duration ||
+                    isProcessing[`add-exercise-${stage.id}`]
+                  }
                 >
-                  Добавить
+                  {isProcessing[`add-exercise-${stage.id}`] ? 'Добавление...' : 'Добавить'}
                 </Button>
               </FormRow>
             </StageContent>

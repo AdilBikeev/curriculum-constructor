@@ -21,8 +21,18 @@ public static class DependencyInjection
     {
         services.AddDatabase(configuration);
         services.AddDatabaseInitializer();
-        // Здесь будет регистрация репозиториев, когда они появятся
-        // services.AddRepositories();
+        services.AddRepositories();
+
+        return services;
+    }
+
+    /// <summary>
+    /// Регистрация репозиториев
+    /// </summary>
+    private static IServiceCollection AddRepositories(this IServiceCollection services)
+    {
+        services.AddScoped<Application.Interfaces.ILessonStageRepository, Repositories.LessonStageRepository>();
+        services.AddScoped<Application.Interfaces.IExerciseRepository, Repositories.ExerciseRepository>();
 
         return services;
     }

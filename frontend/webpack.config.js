@@ -56,6 +56,13 @@ module.exports = (env, argv) => {
       hot: true,
       historyApiFallback: true,
       open: true,
+      proxy: {
+        '/api': {
+          target: 'http://localhost:5265',
+          changeOrigin: true,
+          secure: false,
+        },
+      },
     },
     devtool: isProduction ? 'source-map' : 'eval-source-map',
   };

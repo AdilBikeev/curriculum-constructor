@@ -29,6 +29,8 @@ import { ImportExportPanel } from './ImportExportPanel';
 interface LessonPlanBuilderProps {
   stages: LessonStage[];
   onSave?: (items: LessonPlanItem[]) => void;
+  onRefreshStages?: () => Promise<void>;
+  onRefreshStageExercises?: (stageId: string) => Promise<void>;
 }
 
 const BuilderContainer = styled.div`
@@ -179,7 +181,7 @@ const WarningMessage = styled.div<{ $isError: boolean }>`
   margin-top: ${({ theme }) => theme.spacing.sm};
 `;
 
-export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, onSave }) => {
+export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, onSave, onRefreshStages, onRefreshStageExercises }) => {
   const [items, setItems] = useState<LessonPlanItem[]>([]);
   const [planTitle, setPlanTitle] = useState<string>('');
   const [currentPlanId, setCurrentPlanId] = useState<string | null>(null);
@@ -287,7 +289,11 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
     return times;
   }, [stageOrder, groupedByStage, itemStartTimes, lessonStartTime]);
 
-  const handleAddStageClick = (position: 'top' | 'bottom') => {
+  const handleAddStageClick = async (position: 'top' | 'bottom') => {
+    // Обновляем список стадий перед открытием модального окна
+    if (onRefreshStages) {
+      await onRefreshStages();
+    }
     setStageModalPosition(position);
     setIsStageModalOpen(true);
   };
@@ -311,7 +317,11 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
   };
 
 
-  const handleAddExerciseToExistingStage = (stageId: string) => {
+  const handleAddExerciseToExistingStage = async (stageId: string) => {
+    // Обновляем только упражнения для конкретной стадии перед открытием модального окна
+    if (onRefreshStageExercises) {
+      await onRefreshStageExercises(stageId);
+    }
     setAddExerciseToStageModalStageId(stageId);
     setIsAddExerciseToStageModalOpen(true);
   };

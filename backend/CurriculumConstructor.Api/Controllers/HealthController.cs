@@ -8,7 +8,7 @@ namespace CurriculumConstructor.Api.Controllers;
 /// </summary>
 [ApiController]
 [ApiVersion("1.0")]
-[Route("api/v{version:apiVersion}/[controller]")]
+[Route("api/v{version:apiVersion}/health")]
 public class HealthController : ControllerBase
 {
     private readonly ILogger<HealthController> _logger;

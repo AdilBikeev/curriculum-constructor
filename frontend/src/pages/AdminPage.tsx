@@ -5,7 +5,7 @@ import { Container } from '../components/common/Container';
 import { Heading } from '../components/common/Heading';
 import { StageManager } from '../components/admin/StageManager';
 import { Button } from '../components/common/Button';
-import { useStages } from '../context/StagesContext';
+import { useAdminStages } from '../context/AdminStagesContext';
 
 const PageContainer = styled.div`
   padding: ${({ theme }) => theme.spacing.xl} 0;
@@ -69,12 +69,47 @@ const BackLink = styled(Link)`
   text-decoration: none;
 `;
 
-const AdminPage: React.FC = () => {
-  const { stages, updateStages, resetToDefault } = useStages();
+const ErrorMessage = styled.div`
+  padding: ${({ theme }) => theme.spacing.md};
+  background-color: #fee;
+  color: #c33;
+  border-radius: ${({ theme }) => theme.borderRadius.sm};
+  margin-bottom: ${({ theme }) => theme.spacing.md};
+  border: 1px solid #fcc;
+`;
 
-  const handleUpdateStages = (updatedStages: typeof stages) => {
-    updateStages(updatedStages);
+const LoadingMessage = styled.div`
+  padding: ${({ theme }) => theme.spacing.xl};
+  text-align: center;
+  color: ${({ theme }) => theme.colors.secondary};
+`;
+
+const AdminPage: React.FC = () => {
+  const {
+    stages,
+    isLoading,
+    error,
+    refreshStages,
+    addStage,
+    deleteStage,
+    addExercise,
+    updateExercise,
+    deleteExercise,
+  } = useAdminStages();
+
+  const handleReset = async () => {
+    await refreshStages();
   };
+
+  if (isLoading) {
+    return (
+      <PageContainer>
+        <Container>
+          <LoadingMessage>Загрузка данных...</LoadingMessage>
+        </Container>
+      </PageContainer>
+    );
+  }
 
   return (
     <PageContainer>
@@ -91,12 +126,20 @@ const AdminPage: React.FC = () => {
             <BackLink to="/lesson-plan">
               <Button variant="secondary">← Вернуться к конструктору</Button>
             </BackLink>
-            <Button variant="secondary" onClick={resetToDefault}>
-              🔄 Сбросить к значениям по умолчанию
+            <Button variant="secondary" onClick={handleReset} disabled={isLoading}>
+              🔄 Обновить данные
             </Button>
           </HeaderActions>
         </PageHeader>
-        <StageManager stages={stages} onUpdate={handleUpdateStages} />
+        {error && <ErrorMessage>Ошибка: {error}</ErrorMessage>}
+        <StageManager
+          stages={stages}
+          onAddStage={addStage}
+          onDeleteStage={deleteStage}
+          onAddExercise={addExercise}
+          onUpdateExercise={updateExercise}
+          onDeleteExercise={deleteExercise}
+        />
       </Container>
     </PageContainer>
   );

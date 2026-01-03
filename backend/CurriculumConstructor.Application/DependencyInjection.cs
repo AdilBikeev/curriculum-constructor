@@ -19,9 +19,18 @@ public static class DependencyInjection
         // Регистрация валидаторов FluentValidation из текущей сборки
         services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
 
-        // Здесь будет регистрация сервисов приложения, когда они появятся
-        // services.AddServices();
-        // services.AddMappers();
+        services.AddServices();
+
+        return services;
+    }
+
+    /// <summary>
+    /// Регистрация сервисов приложения
+    /// </summary>
+    private static IServiceCollection AddServices(this IServiceCollection services)
+    {
+        services.AddScoped<Services.ILessonStageService, Services.LessonStageService>();
+        services.AddScoped<Services.IExerciseService, Services.ExerciseService>();
 
         return services;
     }

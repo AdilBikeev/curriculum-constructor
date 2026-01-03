@@ -3,7 +3,11 @@ import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 class ApiService {
   private instance: AxiosInstance;
 
-  constructor(baseURL: string = process.env.API_URL || 'http://localhost:3001/api') {
+  constructor() {
+    // Используем относительные пути для работы с прокси webpack в разработке
+    // В продакшене можно настроить через webpack DefinePlugin или использовать абсолютный URL
+    const baseURL = '';
+    
     this.instance = axios.create({
       baseURL,
       timeout: 10000,
