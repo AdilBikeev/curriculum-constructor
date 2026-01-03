@@ -8,10 +8,11 @@ interface HeadingProps {
 }
 
 const StyledHeading = styled.h1<{ $level: number }>`
-  font-weight: 600;
-  line-height: 1.2;
+  font-weight: 700;
+  line-height: 1.3;
   margin-bottom: ${({ theme }) => theme.spacing.md};
   color: ${({ theme }) => theme.colors.dark};
+  letter-spacing: -0.02em;
 
   ${({ $level }) => {
     const sizes = {
