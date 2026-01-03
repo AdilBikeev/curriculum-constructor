@@ -7,7 +7,7 @@ namespace CurriculumConstructor.Infrastructure.Database;
 /// <summary>
 /// Инициализатор базы данных
 /// </summary>
-public class DatabaseInitializer
+internal class DatabaseInitializer
 {
     private readonly string _connectionString;
     private readonly ILogger<DatabaseInitializer> _logger;

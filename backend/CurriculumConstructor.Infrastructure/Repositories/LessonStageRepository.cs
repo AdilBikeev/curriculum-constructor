@@ -8,7 +8,7 @@ namespace CurriculumConstructor.Infrastructure.Repositories;
 /// <summary>
 /// Репозиторий для работы со стадиями уроков
 /// </summary>
-public class LessonStageRepository : BaseRepository<LessonStage, string>, ILessonStageRepository
+internal class LessonStageRepository : BaseRepository<LessonStage, string>, ILessonStageRepository
 {
     public LessonStageRepository(IDbConnection connection) : base(connection, "LessonStages", "Id")
     {

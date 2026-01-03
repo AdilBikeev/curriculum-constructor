@@ -9,7 +9,7 @@ namespace CurriculumConstructor.Application.Services;
 /// <summary>
 /// Сервис для работы со стадиями уроков
 /// </summary>
-public class LessonStageService : ILessonStageService
+internal class LessonStageService : ILessonStageService
 {
     private readonly ILessonStageRepository _stageRepository;
     private readonly IExerciseRepository _exerciseRepository;

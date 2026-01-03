@@ -4,7 +4,7 @@ namespace CurriculumConstructor.Application.Converters;
 /// Базовый класс для конвертеров объектов
 /// Предоставляет вспомогательные методы для преобразования коллекций
 /// </summary>
-public static class Converter
+internal static class Converter
 {
     /// <summary>
     /// Преобразует коллекцию объектов

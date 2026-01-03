@@ -6,7 +6,7 @@ namespace CurriculumConstructor.Application.Converters;
 /// <summary>
 /// Конвертер для стадий уроков
 /// </summary>
-public static class StageConverter
+internal static class StageConverter
 {
     /// <summary>
     /// Преобразует сущность стадии в DTO

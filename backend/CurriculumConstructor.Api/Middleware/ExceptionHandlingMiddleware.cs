@@ -8,7 +8,7 @@ namespace CurriculumConstructor.Api.Middleware;
 /// <summary>
 /// Middleware для глобальной обработки исключений
 /// </summary>
-public class ExceptionHandlingMiddleware
+internal class ExceptionHandlingMiddleware
 {
     private readonly RequestDelegate _next;
     private readonly ILogger<ExceptionHandlingMiddleware> _logger;

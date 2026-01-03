@@ -9,7 +9,7 @@ namespace CurriculumConstructor.Infrastructure.Repositories;
 /// </summary>
 /// <typeparam name="T">Тип сущности</typeparam>
 /// <typeparam name="TId">Тип идентификатора</typeparam>
-public abstract class BaseRepository<T, TId> : IRepository<T, TId> where T : class
+internal abstract class BaseRepository<T, TId> : IRepository<T, TId> where T : class
 {
     protected readonly IDbConnection Connection;
     protected readonly string TableName;

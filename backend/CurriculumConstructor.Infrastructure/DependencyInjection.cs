@@ -63,5 +63,15 @@ public static class DependencyInjection
         services.AddScoped<DatabaseInitializer>();
         return services;
     }
+
+    /// <summary>
+    /// Инициализирует базу данных
+    /// </summary>
+    /// <param name="serviceProvider">Провайдер сервисов</param>
+    public static void InitializeDatabase(this IServiceProvider serviceProvider)
+    {
+        var dbInitializer = serviceProvider.GetRequiredService<DatabaseInitializer>();
+        dbInitializer.Initialize();
+    }
 }
 

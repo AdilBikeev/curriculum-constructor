@@ -6,7 +6,7 @@ namespace CurriculumConstructor.Application.Converters;
 /// <summary>
 /// Конвертер для упражнений
 /// </summary>
-public static class ExerciseConverter
+internal static class ExerciseConverter
 {
     /// <summary>
     /// Преобразует сущность упражнения в DTO

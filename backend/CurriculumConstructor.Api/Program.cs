@@ -1,4 +1,5 @@
 using CurriculumConstructor.Api.Extensions;
+using CurriculumConstructor.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,8 +21,7 @@ var app = builder.Build();
 // Инициализация базы данных
 using (var scope = app.Services.CreateScope())
 {
-    var dbInitializer = scope.ServiceProvider.GetRequiredService<CurriculumConstructor.Infrastructure.Database.DatabaseInitializer>();
-    dbInitializer.Initialize();
+    scope.ServiceProvider.InitializeDatabase();
 }
 
 // Настройка pipeline

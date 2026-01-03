@@ -9,7 +9,7 @@ namespace CurriculumConstructor.Application.Services;
 /// <summary>
 /// Сервис для работы с упражнениями
 /// </summary>
-public class ExerciseService : IExerciseService
+internal class ExerciseService : IExerciseService
 {
     private readonly IExerciseRepository _exerciseRepository;
     private readonly ILessonStageRepository _stageRepository;

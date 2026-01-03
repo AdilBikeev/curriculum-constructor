@@ -8,7 +8,7 @@ namespace CurriculumConstructor.Infrastructure.Repositories;
 /// <summary>
 /// Репозиторий для работы с упражнениями
 /// </summary>
-public class ExerciseRepository : BaseRepository<Exercise, string>, IExerciseRepository
+internal class ExerciseRepository : BaseRepository<Exercise, string>, IExerciseRepository
 {
     public ExerciseRepository(IDbConnection connection) : base(connection, "Exercises", "Id")
     {
