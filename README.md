@@ -1,63 +1,28 @@
-# Конструктор учебных программ
+# Curriculum Constructor
 
-Приложение для создания и управления учебными программами, построенное на React, TypeScript и современных инструментах разработки.
-
-## Технологический стек
-
-- **React 18** - UI библиотека
-- **TypeScript** - типизация
-- **React Router** - маршрутизация
-- **Axios** - HTTP-запросы
-- **styled-components** - CSS-in-JS стилизация
-- **Webpack** - сборка проекта
+Проект конструктора учебных программ, состоящий из frontend и backend частей.
 
 ## Структура проекта
 
 ```
-src/
-├── components/     # Переиспользуемые компоненты
-├── pages/          # Страницы приложения
-├── services/       # API сервисы
-├── types/          # TypeScript типы
-├── utils/          # Утилитарные функции
-└── styles/         # Глобальные стили и темы
+curriculum-constructor/
+├── frontend/     # React frontend приложение
+└── backend/      # Backend API (в разработке)
 ```
 
-## Установка и запуск
+## Frontend
 
-### Установка зависимостей
+Frontend приложение находится в папке `frontend/`. Для работы с frontend:
 
 ```bash
+cd frontend
 npm install
-```
-
-### Запуск в режиме разработки
-
-```bash
 npm start
 ```
 
-Приложение будет доступно по адресу `http://localhost:3000`
+Подробности в [frontend/README.md](frontend/README.md)
 
-### Сборка для продакшена
+## Backend
 
-```bash
-npm run build
-```
-
-### Проверка типов
-
-```bash
-npm run type-check
-```
-
-## Особенности
-
-- Строгая типизация TypeScript
-- Модульная архитектура
-- Переиспользуемые компоненты
-- Централизованная система стилей с темами
-- Настроенный API-сервис с interceptors
-- Алиасы путей для удобного импорта
-
+Backend API находится в папке `backend/`. (В разработке)
 
