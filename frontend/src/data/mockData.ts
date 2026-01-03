@@ -8,10 +8,10 @@ export const mockStages: LessonStage[] = [
     name: 'Бег по кругу',
     description: 'Разминка в движении',
     exercises: [
-      { id: 'ex-1-1', name: 'Приставной шаг', duration: 5, description: 'Боковое перемещение' },
-      { id: 'ex-1-2', name: 'Поднятие колен', duration: 5, description: 'Высокое поднимание коленей' },
-      { id: 'ex-1-3', name: 'Бег на месте', duration: 3, description: 'Быстрый бег на месте' },
-      { id: 'ex-1-4', name: 'Прыжки', duration: 4, description: 'Прыжки на двух ногах' },
+      { id: 'ex-1-1', name: 'Приставной шаг', duration: 300, description: 'Боковое перемещение' }, // 5 минут = 300 секунд
+      { id: 'ex-1-2', name: 'Поднятие колен', duration: 300, description: 'Высокое поднимание коленей' }, // 5 минут = 300 секунд
+      { id: 'ex-1-3', name: 'Бег на месте', duration: 180, description: 'Быстрый бег на месте' }, // 3 минуты = 180 секунд
+      { id: 'ex-1-4', name: 'Прыжки', duration: 240, description: 'Прыжки на двух ногах' }, // 4 минуты = 240 секунд
     ],
   },
   {
@@ -19,9 +19,9 @@ export const mockStages: LessonStage[] = [
     name: 'Разминка на месте',
     description: 'Статичная разминка',
     exercises: [
-      { id: 'ex-2-1', name: 'Упражнения на руки', duration: 8, description: 'Круговые движения, махи' },
-      { id: 'ex-2-2', name: 'Упражнения на ноги', duration: 10, description: 'Приседания, выпады' },
-      { id: 'ex-2-3', name: 'Растяжка', duration: 7, description: 'Растяжка основных групп мышц' },
+      { id: 'ex-2-1', name: 'Упражнения на руки', duration: 480, description: 'Круговые движения, махи' }, // 8 минут = 480 секунд
+      { id: 'ex-2-2', name: 'Упражнения на ноги', duration: 600, description: 'Приседания, выпады' }, // 10 минут = 600 секунд
+      { id: 'ex-2-3', name: 'Растяжка', duration: 420, description: 'Растяжка основных групп мышц' }, // 7 минут = 420 секунд
     ],
   },
   {
@@ -29,9 +29,9 @@ export const mockStages: LessonStage[] = [
     name: 'Аварский танец',
     description: 'Изучение элементов аварского танца',
     exercises: [
-      { id: 'ex-3-1', name: 'Ковырялки', duration: 12, description: 'Основные движения ковырялок' },
-      { id: 'ex-3-2', name: 'Боковой шаг', duration: 10, description: 'Боковые перемещения' },
-      { id: 'ex-3-3', name: 'Основные связки', duration: 15, description: 'Соединение движений' },
+      { id: 'ex-3-1', name: 'Ковырялки', duration: 720, description: 'Основные движения ковырялок' }, // 12 минут = 720 секунд
+      { id: 'ex-3-2', name: 'Боковой шаг', duration: 600, description: 'Боковые перемещения' }, // 10 минут = 600 секунд
+      { id: 'ex-3-3', name: 'Основные связки', duration: 900, description: 'Соединение движений' }, // 15 минут = 900 секунд
     ],
   },
   {
@@ -39,9 +39,9 @@ export const mockStages: LessonStage[] = [
     name: 'Упражнения на осанку',
     description: 'Формирование правильной осанки',
     exercises: [
-      { id: 'ex-4-1', name: 'Позиции рук', duration: 8, description: 'Классические позиции' },
-      { id: 'ex-4-2', name: 'Самолетик', duration: 5, description: 'Упражнение на баланс' },
-      { id: 'ex-4-3', name: 'Классика', duration: 10, description: 'Классические позиции ног' },
+      { id: 'ex-4-1', name: 'Позиции рук', duration: 480, description: 'Классические позиции' }, // 8 минут = 480 секунд
+      { id: 'ex-4-2', name: 'Самолетик', duration: 300, description: 'Упражнение на баланс' }, // 5 минут = 300 секунд
+      { id: 'ex-4-3', name: 'Классика', duration: 600, description: 'Классические позиции ног' }, // 10 минут = 600 секунд
     ],
   },
   {
@@ -49,9 +49,9 @@ export const mockStages: LessonStage[] = [
     name: 'Изучение новых движений в лезгинке',
     description: 'Новые элементы или повторение старых',
     exercises: [
-      { id: 'ex-5-1', name: 'Новые движения', duration: 20, description: 'Изучение новых элементов' },
-      { id: 'ex-5-2', name: 'Повторение старых', duration: 15, description: 'Закрепление пройденного' },
-      { id: 'ex-5-3', name: 'Связки движений', duration: 18, description: 'Соединение элементов' },
+      { id: 'ex-5-1', name: 'Новые движения', duration: 1200, description: 'Изучение новых элементов' }, // 20 минут = 1200 секунд
+      { id: 'ex-5-2', name: 'Повторение старых', duration: 900, description: 'Закрепление пройденного' }, // 15 минут = 900 секунд
+      { id: 'ex-5-3', name: 'Связки движений', duration: 1080, description: 'Соединение элементов' }, // 18 минут = 1080 секунд
     ],
   },
   {
@@ -59,9 +59,9 @@ export const mockStages: LessonStage[] = [
     name: 'Практика',
     description: 'Применение изученного на практике',
     exercises: [
-      { id: 'ex-6-1', name: 'Танцы в кругу', duration: 15, description: 'Коллективное исполнение' },
-      { id: 'ex-6-2', name: 'Свадебный танец', duration: 12, description: 'Отработка свадебного танца' },
-      { id: 'ex-6-3', name: 'Проходки по 2 человека', duration: 10, description: 'Парная отработка движений' },
+      { id: 'ex-6-1', name: 'Танцы в кругу', duration: 900, description: 'Коллективное исполнение' }, // 15 минут = 900 секунд
+      { id: 'ex-6-2', name: 'Свадебный танец', duration: 720, description: 'Отработка свадебного танца' }, // 12 минут = 720 секунд
+      { id: 'ex-6-3', name: 'Проходки по 2 человека', duration: 600, description: 'Парная отработка движений' }, // 10 минут = 600 секунд
     ],
   },
 ];
