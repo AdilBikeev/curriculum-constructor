@@ -226,7 +226,7 @@ export const StageGroup: React.FC<StageGroupProps> = ({
           <StageInfo>
             <StageTitle>{stageName}</StageTitle>
             <StageCount>
-              {items.length} {items.length === 1 ? 'упражнение' : items.length < 5 ? 'упражнения' : 'упражнений'}
+              Кол-во упражнений: {items.length}
             </StageCount>
           </StageInfo>
         </StageHeaderLeft>
