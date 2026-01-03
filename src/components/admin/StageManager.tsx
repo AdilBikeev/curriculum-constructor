@@ -13,23 +13,24 @@ interface StageManagerProps {
 const ManagerContainer = styled.div`
   display: flex;
   flex-direction: column;
-  gap: ${({ theme }) => theme.spacing.lg};
+  gap: ${({ theme }) => theme.spacing.sm};
 `;
 
 const StageCard = styled(Card)`
-  margin-bottom: ${({ theme }) => theme.spacing.lg};
-  border-left: 4px solid ${({ theme }) => theme.colors.primary};
+  margin-bottom: ${({ theme }) => theme.spacing.xs};
+  border-left: 3px solid ${({ theme }) => theme.colors.primary};
+  padding: ${({ theme }) => theme.spacing.xs} !important;
 `;
 
 const StageHeader = styled.div`
   display: flex;
   flex-direction: column;
-  gap: ${({ theme }) => theme.spacing.md};
-  margin-bottom: ${({ theme }) => theme.spacing.sm};
-  padding: ${({ theme }) => theme.spacing.md};
+  gap: ${({ theme }) => theme.spacing.xs};
+  margin-bottom: ${({ theme }) => theme.spacing.xs};
+  padding: ${({ theme }) => theme.spacing.xs} ${({ theme }) => theme.spacing.sm};
   background-color: ${({ theme }) => theme.colors.white};
-  border-radius: ${({ theme }) => theme.borderRadius.md};
-  border-bottom: 2px solid ${({ theme }) => theme.colors.gray};
+  border-radius: ${({ theme }) => theme.borderRadius.sm};
+  border-bottom: 1px solid ${({ theme }) => theme.colors.gray};
   cursor: pointer;
   user-select: none;
   transition: background-color ${({ theme }) => theme.transitions.normal};
@@ -48,13 +49,13 @@ const StageHeader = styled.div`
 const StageHeaderLeft = styled.div`
   display: flex;
   align-items: center;
-  gap: ${({ theme }) => theme.spacing.sm};
+  gap: ${({ theme }) => theme.spacing.xs};
   flex: 1;
   min-width: 0;
 `;
 
 const StageIcon = styled.div<{ $isExpanded: boolean }>`
-  font-size: 1.25rem;
+  font-size: 0.875rem;
   flex-shrink: 0;
   transition: transform ${({ theme }) => theme.transitions.normal};
   transform: ${({ $isExpanded }) => ($isExpanded ? 'rotate(90deg)' : 'rotate(0deg)')};
@@ -62,7 +63,7 @@ const StageIcon = styled.div<{ $isExpanded: boolean }>`
 
 const StageHeaderActions = styled.div`
   display: flex;
-  gap: ${({ theme }) => theme.spacing.sm};
+  gap: ${({ theme }) => theme.spacing.xs};
   align-items: center;
   flex-shrink: 0;
   position: relative;
@@ -76,21 +77,21 @@ const StageHeaderActions = styled.div`
 const StageTitle = styled.h3`
   color: ${({ theme }) => theme.colors.dark};
   margin: 0;
-  font-size: 1.125rem;
+  font-size: 0.875rem;
   font-weight: 700;
 
   @media (min-width: ${({ theme }) => theme.breakpoints.tablet}) {
-    font-size: 1.375rem;
+    font-size: 0.9375rem;
   }
 `;
 
 const ExerciseList = styled.div`
   display: flex;
   flex-direction: column;
-  gap: ${({ theme }) => theme.spacing.md};
-  margin-top: ${({ theme }) => theme.spacing.md};
-  padding-left: ${({ theme }) => theme.spacing.md};
-  padding-right: ${({ theme }) => theme.spacing.md};
+  gap: ${({ theme }) => theme.spacing.xs};
+  margin-top: ${({ theme }) => theme.spacing.xs};
+  padding-left: ${({ theme }) => theme.spacing.sm};
+  padding-right: ${({ theme }) => theme.spacing.sm};
 `;
 
 const StageContent = styled.div<{ $isExpanded: boolean }>`
@@ -100,10 +101,10 @@ const StageContent = styled.div<{ $isExpanded: boolean }>`
 const ExerciseItem = styled.div`
   display: flex;
   flex-direction: column;
-  gap: ${({ theme }) => theme.spacing.md};
-  padding: ${({ theme }) => theme.spacing.md};
+  gap: ${({ theme }) => theme.spacing.xs};
+  padding: ${({ theme }) => theme.spacing.xs} ${({ theme }) => theme.spacing.sm};
   background-color: ${({ theme }) => theme.colors.lightGray};
-  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  border-radius: ${({ theme }) => theme.borderRadius.sm};
   border: 1px solid ${({ theme }) => theme.colors.gray};
   transition: all ${({ theme }) => theme.transitions.normal};
 
@@ -111,8 +112,8 @@ const ExerciseItem = styled.div`
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    padding: ${({ theme }) => theme.spacing.md} ${({ theme }) => theme.spacing.lg};
-    gap: ${({ theme }) => theme.spacing.sm};
+    padding: ${({ theme }) => theme.spacing.xs} ${({ theme }) => theme.spacing.sm};
+    gap: ${({ theme }) => theme.spacing.xs};
   }
 
   &:hover {
@@ -123,9 +124,9 @@ const ExerciseItem = styled.div`
 
 const ExerciseActionsWrapper = styled.div`
   display: flex;
-  gap: ${({ theme }) => theme.spacing.sm};
+  gap: ${({ theme }) => theme.spacing.xs};
   justify-content: flex-end;
-  padding-top: ${({ theme }) => theme.spacing.sm};
+  padding-top: ${({ theme }) => theme.spacing.xs};
   border-top: 1px solid ${({ theme }) => theme.colors.gray};
 
   @media (min-width: ${({ theme }) => theme.breakpoints.tablet}) {
@@ -138,16 +139,21 @@ const ExerciseInfo = styled.div`
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: ${({ theme }) => theme.spacing.xs};
+  gap: 2px;
 `;
 
 const ExerciseName = styled.span`
   font-weight: 500;
   color: ${({ theme }) => theme.colors.dark};
+  font-size: 0.8125rem;
+
+  @media (min-width: ${({ theme }) => theme.breakpoints.tablet}) {
+    font-size: 0.875rem;
+  }
 `;
 
 const ExerciseDetails = styled.span`
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   color: ${({ theme }) => theme.colors.secondary};
 `;
 
@@ -159,9 +165,9 @@ const ExerciseActions = styled.div`
 const FormRow = styled.div`
   display: grid;
   grid-template-columns: 1fr;
-  gap: ${({ theme }) => theme.spacing.md};
+  gap: ${({ theme }) => theme.spacing.xs};
   align-items: end;
-  margin-top: ${({ theme }) => theme.spacing.md};
+  margin-top: ${({ theme }) => theme.spacing.xs};
 
   @media (min-width: ${({ theme }) => theme.breakpoints.tablet}) {
     grid-template-columns: 1fr 1fr auto;
@@ -171,7 +177,7 @@ const FormRow = styled.div`
 const FormRowEdit = styled.div`
   display: grid;
   grid-template-columns: 1fr;
-  gap: ${({ theme }) => theme.spacing.sm};
+  gap: ${({ theme }) => theme.spacing.xs};
   align-items: end;
   margin-top: 0;
 
@@ -182,6 +188,7 @@ const FormRowEdit = styled.div`
 
 const AddStageCard = styled(Card)`
   background-color: ${({ theme }) => theme.colors.light};
+  padding: ${({ theme }) => theme.spacing.sm} !important;
 `;
 
 export const StageManager: React.FC<StageManagerProps> = ({ stages, onUpdate }) => {
@@ -300,7 +307,7 @@ export const StageManager: React.FC<StageManagerProps> = ({ stages, onUpdate }) 
   return (
     <ManagerContainer>
       <AddStageCard>
-        <h3 style={{ marginBottom: '1rem' }}>Добавить новую стадию</h3>
+        <h3 style={{ marginBottom: '0.5rem', fontSize: '0.9375rem', fontWeight: 600 }}>Добавить новую стадию</h3>
         <FormRow>
           <Input
             label="Название стадии"
@@ -404,7 +411,7 @@ export const StageManager: React.FC<StageManagerProps> = ({ stages, onUpdate }) 
                 ))}
               </ExerciseList>
 
-              <FormRow style={{ marginTop: '1rem', paddingLeft: '1rem', paddingRight: '1rem' }}>
+              <FormRow style={{ marginTop: '0.5rem', paddingLeft: '0.5rem', paddingRight: '0.5rem' }}>
                 <Input
                   placeholder="Название упражнения"
                   value={newExerciseName}
