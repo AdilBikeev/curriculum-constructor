@@ -95,11 +95,14 @@ const StyledButton = styled.button<{ $variant: string; $size: string }>`
       },
     };
     const style = variants[$variant as keyof typeof variants];
+    const hoverStyles = style['&:hover'];
     return `
       background: ${style.background};
       color: ${style.color};
       &:hover {
-        ${style['&:hover']}
+        background: ${hoverStyles.background};
+        box-shadow: ${hoverStyles.boxShadow};
+        transform: ${hoverStyles.transform};
       }
       &:disabled {
         opacity: 0.5;
