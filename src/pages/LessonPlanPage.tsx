@@ -48,8 +48,6 @@ const LessonPlanPage: React.FC = () => {
 
   const handleSave = (items: any[]) => {
     // Здесь можно добавить логику сохранения
-    console.log('Сохранение плана урока:', items);
-    alert(`✅ План урока сохранен! Всего упражнений: ${items.length}`);
   };
 
   return (

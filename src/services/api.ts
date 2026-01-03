@@ -40,7 +40,6 @@ class ApiService {
         // Обработка ошибок
         if (error.response?.status === 401) {
           // Обработка неавторизованного доступа
-          console.error('Unauthorized access');
         }
         return Promise.reject(error);
       }

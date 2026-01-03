@@ -37,7 +37,7 @@ export const saveLessonPlan = (plan: LessonPlan): void => {
     const plansToSave = allPlans.slice(0, 50);
     localStorage.setItem(STORAGE_KEY_PLANS, JSON.stringify(plansToSave));
   } catch (error) {
-    console.error('Ошибка при сохранении плана урока:', error);
+    // Ошибка при сохранении плана урока
   }
 };
 
@@ -51,7 +51,7 @@ export const loadCurrentLessonPlan = (): SavedLessonPlan | null => {
       return JSON.parse(saved) as SavedLessonPlan;
     }
   } catch (error) {
-    console.error('Ошибка при загрузке текущего плана урока:', error);
+    // Ошибка при загрузке текущего плана урока
   }
   return null;
 };
@@ -66,7 +66,7 @@ export const getAllLessonPlans = (): SavedLessonPlan[] => {
       return JSON.parse(saved) as SavedLessonPlan[];
     }
   } catch (error) {
-    console.error('Ошибка при загрузке всех планов уроков:', error);
+    // Ошибка при загрузке всех планов уроков
   }
   return [];
 };
@@ -94,7 +94,7 @@ export const deleteLessonPlan = (id: string): void => {
       localStorage.removeItem(STORAGE_KEY_CURRENT_PLAN);
     }
   } catch (error) {
-    console.error('Ошибка при удалении плана урока:', error);
+    // Ошибка при удалении плана урока
   }
 };
 
@@ -128,7 +128,6 @@ export const exportLessonPlanToString = (plan: LessonPlan): string => {
   try {
     return JSON.stringify(plan, null, 2);
   } catch (error) {
-    console.error('Ошибка при экспорте плана урока:', error);
     throw error;
   }
 };
@@ -151,7 +150,6 @@ export const importLessonPlanFromString = (jsonString: string): LessonPlan | nul
     
     return plan;
   } catch (error) {
-    console.error('Ошибка при импорте плана урока:', error);
     return null;
   }
 };
@@ -172,7 +170,6 @@ export const exportLessonPlanToFile = (plan: LessonPlan, filename?: string): voi
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
   } catch (error) {
-    console.error('Ошибка при экспорте плана урока в файл:', error);
     alert('Ошибка при экспорте плана урока');
   }
 };
@@ -190,13 +187,11 @@ export const importLessonPlanFromFile = (file: File): Promise<LessonPlan | null>
         const plan = importLessonPlanFromString(content);
         resolve(plan);
       } catch (error) {
-        console.error('Ошибка при чтении файла:', error);
         resolve(null);
       }
     };
     
     reader.onerror = () => {
-      console.error('Ошибка при чтении файла');
       resolve(null);
     };
     
@@ -212,7 +207,6 @@ export const exportAllLessonPlansToString = (): string => {
     const allPlans = getAllLessonPlans();
     return JSON.stringify(allPlans, null, 2);
   } catch (error) {
-    console.error('Ошибка при экспорте всех планов уроков:', error);
     throw error;
   }
 };
@@ -242,7 +236,6 @@ export const importLessonPlansFromString = (jsonString: string): SavedLessonPlan
       };
     });
   } catch (error) {
-    console.error('Ошибка при импорте планов уроков:', error);
     throw error;
   }
 };
