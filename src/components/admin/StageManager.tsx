@@ -286,6 +286,11 @@ export const StageManager: React.FC<StageManagerProps> = ({ stages, onUpdate }) 
   const handleSaveEdit = (stageId: string, exerciseId: string) => {
     if (!editingExerciseData) return;
 
+    // Validate exercise data before saving
+    if (!editingExerciseData.name.trim()) return;
+    const duration = editingExerciseData.duration;
+    if (isNaN(duration) || duration <= 0) return;
+
     onUpdate(
       stages.map((stage) =>
         stage.id === stageId
@@ -295,8 +300,8 @@ export const StageManager: React.FC<StageManagerProps> = ({ stages, onUpdate }) 
                 ex.id === exerciseId
                   ? {
                       ...ex,
-                      name: editingExerciseData.name,
-                      duration: editingExerciseData.duration,
+                      name: editingExerciseData.name.trim(),
+                      duration,
                     }
                   : ex
               ),
