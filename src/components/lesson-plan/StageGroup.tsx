@@ -9,6 +9,8 @@ interface StageGroupProps {
   stageId: string;
   stageName: string;
   items: LessonPlanItem[];
+  stageStartTime: string;
+  itemStartTimes: { [itemId: string]: string };
   onRemoveItem: (id: string) => void;
   onMoveExerciseUp?: (id: string) => void;
   onMoveExerciseDown?: (id: string) => void;
@@ -143,12 +145,37 @@ const StageDuration = styled.div`
   background-color: ${({ theme }) => theme.colors.light};
   border-radius: ${({ theme }) => theme.borderRadius.sm};
   white-space: nowrap;
-  margin-left: auto;
   
   @media (min-width: ${({ theme }) => theme.breakpoints.tablet}) {
     font-size: 0.8125rem;
     padding: ${({ theme }) => theme.spacing.xs} ${({ theme }) => theme.spacing.sm};
   }
+`;
+
+const StageTime = styled.div`
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  color: ${({ theme }) => theme.colors.secondary};
+  font-weight: 600;
+  padding: 2px ${({ theme }) => theme.spacing.xs};
+  background-color: ${({ theme }) => theme.colors.white};
+  border-radius: ${({ theme }) => theme.borderRadius.sm};
+  white-space: nowrap;
+  border: 1px solid ${({ theme }) => theme.colors.gray};
+  
+  @media (min-width: ${({ theme }) => theme.breakpoints.tablet}) {
+    font-size: 0.8125rem;
+    padding: ${({ theme }) => theme.spacing.xs} ${({ theme }) => theme.spacing.sm};
+  }
+`;
+
+const StageDurationWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  gap: ${({ theme }) => theme.spacing.xs};
+  margin-left: auto;
 `;
 
 const AddExerciseButton = styled(Button)`
@@ -160,6 +187,8 @@ export const StageGroup: React.FC<StageGroupProps> = ({
   stageId,
   stageName,
   items,
+  stageStartTime,
+  itemStartTimes,
   onRemoveItem,
   onMoveExerciseUp,
   onMoveExerciseDown,
@@ -198,10 +227,13 @@ export const StageGroup: React.FC<StageGroupProps> = ({
             <StageTitle>{stageName}</StageTitle>
             <StageCount>
               {items.length} {items.length === 1 ? 'упражнение' : items.length < 5 ? 'упражнения' : 'упражнений'}
-              <StageDuration>⏱️ {stageDuration} мин</StageDuration>
             </StageCount>
           </StageInfo>
         </StageHeaderLeft>
+        <StageDurationWrapper>
+          <StageTime>🕐 {stageStartTime}</StageTime>
+          <StageDuration>⏱️ {stageDuration} мин</StageDuration>
+        </StageDurationWrapper>
         <StageHeaderActions
           onClick={(e) => {
             e.stopPropagation();
@@ -248,6 +280,7 @@ export const StageGroup: React.FC<StageGroupProps> = ({
           <LessonPlanItemComponent
             key={item.id}
             item={item}
+            startTime={itemStartTimes[item.id]}
             onRemove={onRemoveItem}
             onMoveUp={onMoveExerciseUp}
             onMoveDown={onMoveExerciseDown}

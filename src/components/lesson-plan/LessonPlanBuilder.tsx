@@ -9,6 +9,7 @@ import { StageGroup } from './StageGroup';
 import { TimeIndicator } from './TimeIndicator';
 import { Card } from '../common/Card';
 import { Button } from '../common/Button';
+import { TimeInput } from '../common/TimeInput';
 import {
   calculateTotalDuration,
   createLessonPlanItem,
@@ -19,6 +20,7 @@ import {
   moveStageDown,
   reorderItems,
 } from '../../utils/lessonPlan';
+import { addMinutesToTime } from '../../utils/timeCalculation';
 import {
   createLessonPlanFromItems,
 } from '../../utils/storage';
@@ -183,6 +185,7 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
   const [currentPlanId, setCurrentPlanId] = useState<string | null>(null);
   const [expandedStages, setExpandedStages] = useState<Set<string>>(new Set());
   const [planStageOrder, setPlanStageOrder] = useState<string[]>([]);
+  const [lessonStartTime, setLessonStartTime] = useState<string>('14:00');
   const [isStageModalOpen, setIsStageModalOpen] = useState(false);
   const [isAddExerciseToStageModalOpen, setIsAddExerciseToStageModalOpen] = useState(false);
   const [stageModalPosition, setStageModalPosition] = useState<'top' | 'bottom'>('bottom');
@@ -237,6 +240,52 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
   const totalDuration = useMemo(() => calculateTotalDuration(items), [items]);
   const isOverTime = totalDuration > 90;
   const isNearLimit = totalDuration > 80 && totalDuration <= 90;
+
+  // Вычисляем время начала для каждого элемента
+  const itemStartTimes = useMemo(() => {
+    const times: { [itemId: string]: string } = {};
+    let currentTime = lessonStartTime;
+    
+    sortedItems.forEach((item) => {
+      times[item.id] = currentTime;
+      currentTime = addMinutesToTime(currentTime, item.duration);
+    });
+    
+    return times;
+  }, [sortedItems, lessonStartTime]);
+
+  // Вычисляем время начала для каждой стадии (время начала первого упражнения стадии)
+  const stageStartTimes = useMemo(() => {
+    const times: { [stageId: string]: string } = {};
+    
+    stageOrder.forEach((stageId) => {
+      const stageItems = groupedByStage[stageId] || [];
+      if (stageItems.length > 0) {
+        // Время начала стадии = время начала первого упражнения в стадии
+        times[stageId] = itemStartTimes[stageItems[0].id] || lessonStartTime;
+      } else {
+        // Если стадия пустая, вычисляем время начала на основе предыдущих стадий
+        let currentTime = lessonStartTime;
+        let found = false;
+        for (const prevStageId of stageOrder) {
+          if (prevStageId === stageId) {
+            times[stageId] = currentTime;
+            found = true;
+            break;
+          }
+          const prevStageItems = groupedByStage[prevStageId] || [];
+          prevStageItems.forEach((item) => {
+            currentTime = addMinutesToTime(currentTime, item.duration);
+          });
+        }
+        if (!found) {
+          times[stageId] = currentTime;
+        }
+      }
+    });
+    
+    return times;
+  }, [stageOrder, groupedByStage, itemStartTimes, lessonStartTime]);
 
   const handleAddStageClick = (position: 'top' | 'bottom') => {
     setStageModalPosition(position);
@@ -510,6 +559,8 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
                     stageId={stageId}
                     stageName={stageName}
                     items={stageItems}
+                    stageStartTime={stageStartTimes[stageId] || lessonStartTime}
+                    itemStartTimes={itemStartTimes}
                     onRemoveItem={handleRemoveItem}
                     onMoveExerciseUp={handleMoveExerciseUp}
                     onMoveExerciseDown={handleMoveExerciseDown}
@@ -534,6 +585,13 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
           <CompactSectionTitle>
             ⏱️ Время занятия
           </CompactSectionTitle>
+          <div style={{ marginBottom: '1rem' }}>
+            <TimeInput
+              label="Время начала занятия"
+              value={lessonStartTime}
+              onChange={(value) => setLessonStartTime(value)}
+            />
+          </div>
           <TimeIndicator usedTime={totalDuration} />
           {isOverTime && (
             <WarningMessage $isError={true}>

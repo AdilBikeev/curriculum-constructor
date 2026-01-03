@@ -6,6 +6,7 @@ import { Card } from '../common/Card';
 
 interface LessonPlanItemProps {
   item: LessonPlanItemType;
+  startTime?: string;
   onRemove: (id: string) => void;
   onMoveUp?: (id: string) => void;
   onMoveDown?: (id: string) => void;
@@ -125,6 +126,25 @@ const ItemDuration = styled.div`
   }
 `;
 
+const ItemTime = styled.div`
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 0.75rem;
+  color: ${({ theme }) => theme.colors.secondary};
+  font-weight: 600;
+  padding: 2px ${({ theme }) => theme.spacing.xs};
+  background-color: ${({ theme }) => theme.colors.white};
+  border-radius: ${({ theme }) => theme.borderRadius.sm};
+  white-space: nowrap;
+  border: 1px solid ${({ theme }) => theme.colors.gray};
+
+  @media (min-width: ${({ theme }) => theme.breakpoints.tablet}) {
+    font-size: 0.8125rem;
+    padding: ${({ theme }) => theme.spacing.xs} ${({ theme }) => theme.spacing.sm};
+  }
+`;
+
 const ItemActions = styled.div`
   display: flex;
   gap: ${({ theme }) => theme.spacing.xs};
@@ -136,6 +156,7 @@ const ItemActions = styled.div`
 
 export const LessonPlanItemComponent: React.FC<LessonPlanItemProps> = ({
   item,
+  startTime,
   onRemove,
   onMoveUp,
   onMoveDown,
@@ -150,6 +171,7 @@ export const LessonPlanItemComponent: React.FC<LessonPlanItemProps> = ({
           <ItemTitle>{item.exerciseName}</ItemTitle>
           <ItemSubtitle>
             {item.stageName}
+            {startTime && <ItemTime>🕐 {startTime}</ItemTime>}
             <ItemDuration>⏱️ {item.duration} мин</ItemDuration>
           </ItemSubtitle>
         </ItemInfo>
