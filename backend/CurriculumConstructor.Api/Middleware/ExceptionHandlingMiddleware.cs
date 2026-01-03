@@ -44,7 +44,7 @@ internal class ExceptionHandlingMiddleware
                 response.StatusCode = (int)HttpStatusCode.BadRequest;
                 errorResponse = ApiResponse<object>.ErrorResponse(
                     validationException.Message,
-                    validationException.Errors?.SelectMany(e => e.Value).ToList()
+                    validationException.Errors?.SelectMany(e => e.Value).ToArray()
                 );
                 _logger.LogWarning(exception, "Validation Exception: {Message}", validationException.Message);
                 break;

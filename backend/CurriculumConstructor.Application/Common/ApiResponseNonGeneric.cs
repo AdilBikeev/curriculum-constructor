@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace CurriculumConstructor.Application.Common;
 
 /// <summary>
@@ -7,7 +9,7 @@ public class ApiResponse
 {
     public bool Success { get; set; }
     public string? Message { get; set; }
-    public List<string>? Errors { get; set; }
+    public IReadOnlyCollection<string>? Errors { get; set; }
 
     public static ApiResponse SuccessResponse(string? message = null)
     {
@@ -18,7 +20,7 @@ public class ApiResponse
         };
     }
 
-    public static ApiResponse ErrorResponse(string message, List<string>? errors = null)
+    public static ApiResponse ErrorResponse(string message, IReadOnlyCollection<string>? errors = null)
     {
         return new ApiResponse
         {

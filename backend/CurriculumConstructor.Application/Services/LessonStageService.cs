@@ -36,7 +36,7 @@ internal class LessonStageService : ILessonStageService
             var exercises = await _exerciseRepository.GetByStageIdAsync(stage.Id);
             var stageDto = StageConverter.ToDto(stage) with
             {
-                Exercises = ExerciseConverter.ToDtoCollection(exercises).ToList()
+                Exercises = ExerciseConverter.ToDtoCollection(exercises).ToArray()
             };
             stagesDto.Add(stageDto);
         }
@@ -57,7 +57,7 @@ internal class LessonStageService : ILessonStageService
         var exercises = await _exerciseRepository.GetByStageIdAsync(id);
         var stageDto = StageConverter.ToDto(stage) with
         {
-            Exercises = ExerciseConverter.ToDtoCollection(exercises).ToList()
+            Exercises = ExerciseConverter.ToDtoCollection(exercises).ToArray()
         };
         
         return stageDto;
@@ -80,7 +80,7 @@ internal class LessonStageService : ILessonStageService
         
         var stageDto = StageConverter.ToDto(stage) with
         {
-            Exercises = new List<ExerciseDto>()
+            Exercises = Array.Empty<ExerciseDto>()
         };
         
         return stageDto;

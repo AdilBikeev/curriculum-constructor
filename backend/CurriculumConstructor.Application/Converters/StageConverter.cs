@@ -21,7 +21,7 @@ internal static class StageConverter
             Id = entity.Id,
             Name = entity.Name,
             Description = entity.Description,
-            Exercises = new List<ExerciseDto>()
+            Exercises = Array.Empty<ExerciseDto>()
         };
     }
 

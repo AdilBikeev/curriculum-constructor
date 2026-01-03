@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace CurriculumConstructor.Application.DTOs.Responses;
 
 /// <summary>
@@ -8,6 +10,6 @@ public sealed record StageDto
     public required string Id { get; init; }
     public required string Name { get; init; }
     public string? Description { get; init; }
-    public required List<ExerciseDto> Exercises { get; init; } = new();
+    public required IReadOnlyCollection<ExerciseDto> Exercises { get; init; } = Array.Empty<ExerciseDto>();
 }
 

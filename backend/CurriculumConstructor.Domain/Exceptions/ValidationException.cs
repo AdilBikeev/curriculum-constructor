@@ -1,3 +1,6 @@
+using System.Collections.Generic;
+using System.Linq;
+
 namespace CurriculumConstructor.Domain.Exceptions;
 
 /// <summary>
@@ -5,12 +8,24 @@ namespace CurriculumConstructor.Domain.Exceptions;
 /// </summary>
 public class ValidationException : ApiException
 {
-    public Dictionary<string, string[]>? Errors { get; }
+    public IReadOnlyDictionary<string, IReadOnlyCollection<string>>? Errors { get; }
 
-    public ValidationException(string message, Dictionary<string, string[]>? errors = null) 
+    public ValidationException(string message, IReadOnlyDictionary<string, IReadOnlyCollection<string>>? errors = null) 
         : base(message, 400)
     {
         Errors = errors;
+    }
+
+    /// <summary>
+    /// Создает ValidationException из Dictionary (для совместимости с FluentValidation)
+    /// </summary>
+    public ValidationException(string message, Dictionary<string, string[]>? errors = null) 
+        : base(message, 400)
+    {
+        Errors = errors?.ToDictionary(
+            kvp => kvp.Key,
+            kvp => (IReadOnlyCollection<string>)kvp.Value.ToArray()
+        );
     }
 }
 
