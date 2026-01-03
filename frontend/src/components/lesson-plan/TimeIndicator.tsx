@@ -1,6 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { LESSON_DURATION } from '../../types';
+import { formatDuration, secondsToMinutes } from '../../utils/timeFormat';
 
 interface TimeIndicatorProps {
   usedTime: number;
@@ -109,7 +110,7 @@ export const TimeIndicator: React.FC<TimeIndicatorProps> = ({
       <TimeInfo>
         <TimeLabel>Использовано времени:</TimeLabel>
         <TimeValue $isOver={isOver}>
-          {usedTime} / {totalTime} мин
+          {formatDuration(usedTime)} / {formatDuration(totalTime)}
         </TimeValue>
       </TimeInfo>
       <ProgressBar>
@@ -118,11 +119,11 @@ export const TimeIndicator: React.FC<TimeIndicatorProps> = ({
       <TimeText>
         {isOver ? (
           <span style={{ color: '#ef4444', fontWeight: 600 }}>
-            ⚠️ Превышено на {Math.abs(remainingTime)} мин
+            ⚠️ Превышено на {formatDuration(Math.abs(remainingTime))}
           </span>
         ) : (
           <span>
-            {remainingTime > 10 ? '✅' : '⏳'} Осталось: {remainingTime} мин
+            {remainingTime > 600 ? '✅' : '⏳'} Осталось: {formatDuration(remainingTime)}
           </span>
         )}
       </TimeText>

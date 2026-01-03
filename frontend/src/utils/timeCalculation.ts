@@ -1,9 +1,12 @@
 /**
- * Добавить минуты к времени (24-часовой формат)
+ * Добавить секунды к времени (24-часовой формат)
+ * @param time - время в формате HH:MM
+ * @param seconds - количество секунд для добавления
  */
-export const addMinutesToTime = (time: string, minutes: number): string => {
+export const addMinutesToTime = (time: string, seconds: number): string => {
   const [hours, mins] = time.split(':').map(Number);
-  const totalMinutes = hours * 60 + mins + minutes;
+  const totalSeconds = (hours * 60 + mins) * 60 + seconds;
+  const totalMinutes = Math.floor(totalSeconds / 60);
   const newHours = Math.floor(totalMinutes / 60) % 24; // Ограничиваем до 24-часового формата
   const newMins = totalMinutes % 60;
   return `${String(newHours).padStart(2, '0')}:${String(newMins).padStart(2, '0')}`;

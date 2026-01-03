@@ -4,6 +4,7 @@ import { LessonPlanItem } from '../../types';
 import { LessonPlanItemComponent } from './LessonPlanItem';
 import { Button } from '../common/Button';
 import { Card } from '../common/Card';
+import { formatDuration } from '../../utils/timeFormat';
 
 interface StageGroupProps {
   stageId: string;
@@ -232,7 +233,7 @@ export const StageGroup: React.FC<StageGroupProps> = ({
         </StageHeaderLeft>
         <StageDurationWrapper>
           <StageTime>🕐 {stageStartTime}</StageTime>
-          <StageDuration>⏱️ {stageDuration} мин</StageDuration>
+          <StageDuration>⏱️ {formatDuration(stageDuration)}</StageDuration>
         </StageDurationWrapper>
         <StageHeaderActions
           onClick={(e) => {

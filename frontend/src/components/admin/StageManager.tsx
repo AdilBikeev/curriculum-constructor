@@ -4,6 +4,8 @@ import { LessonStage, Exercise } from '../../types';
 import { Card } from '../common/Card';
 import { Button } from '../common/Button';
 import { Input } from '../common/Input';
+import { Select } from '../common/Select';
+import { formatDuration, minutesToSeconds, secondsToMinutes, TimeUnit } from '../../utils/timeFormat';
 
 interface StageManagerProps {
   stages: LessonStage[];
@@ -174,7 +176,7 @@ const FormRow = styled.div`
   margin-top: ${({ theme }) => theme.spacing.xs};
 
   @media (min-width: ${({ theme }) => theme.breakpoints.tablet}) {
-    grid-template-columns: 1fr 1fr auto;
+    grid-template-columns: 1fr 1fr 1fr auto;
   }
 `;
 
@@ -186,7 +188,7 @@ const FormRowEdit = styled.div`
   margin-top: 0;
 
   @media (min-width: ${({ theme }) => theme.breakpoints.tablet}) {
-    grid-template-columns: 2fr 1fr auto auto;
+    grid-template-columns: 2fr 1fr 1fr auto auto;
   }
 `;
 
@@ -207,10 +209,11 @@ export const StageManager: React.FC<StageManagerProps> = ({
   const [editingExerciseData, setEditingExerciseData] = useState<{
     name: string;
     duration: number;
+    durationUnit: TimeUnit;
   } | null>(null);
   const [newStageName, setNewStageName] = useState('');
   const [newStageDescription, setNewStageDescription] = useState('');
-  const [newExerciseInputs, setNewExerciseInputs] = useState<Record<string, { name: string; duration: string }>>({});
+  const [newExerciseInputs, setNewExerciseInputs] = useState<Record<string, { name: string; duration: string; durationUnit: TimeUnit }>>({});
   const [expandedStages, setExpandedStages] = useState<Set<string>>(new Set());
   const [isProcessing, setIsProcessing] = useState<Record<string, boolean>>({});
 
@@ -254,22 +257,27 @@ export const StageManager: React.FC<StageManagerProps> = ({
     const inputs = newExerciseInputs[stageId];
     if (!inputs || !inputs.name.trim() || !inputs.duration) return;
 
-    const duration = parseInt(inputs.duration);
-    if (isNaN(duration) || duration <= 0) {
+    const durationValue = parseFloat(inputs.duration);
+    if (isNaN(durationValue) || durationValue <= 0) {
       alert('Длительность должна быть положительным числом');
       return;
     }
 
+    // Конвертируем в секунды в зависимости от выбранной единицы
+    const durationInSeconds = inputs.durationUnit === 'minutes' 
+      ? minutesToSeconds(durationValue)
+      : Math.round(durationValue);
+
     const key = `add-exercise-${stageId}`;
     try {
       setProcessing(key, true);
-      await onAddExercise(stageId, inputs.name.trim(), duration);
+      await onAddExercise(stageId, inputs.name.trim(), durationInSeconds);
       // Разворачиваем стадию при добавлении нового упражнения
       setExpandedStages((prev) => new Set(prev).add(stageId));
       // Очищаем поля ввода для этой стадии
       setNewExerciseInputs((prev) => ({
         ...prev,
-        [stageId]: { name: '', duration: '' },
+        [stageId]: { name: '', duration: '', durationUnit: 'minutes' },
       }));
     } catch (error) {
       console.error('Error adding exercise:', error);
@@ -308,7 +316,17 @@ export const StageManager: React.FC<StageManagerProps> = ({
 
   const handleStartEdit = (exercise: Exercise) => {
     setEditingExerciseId(exercise.id);
-    setEditingExerciseData({ name: exercise.name, duration: exercise.duration });
+    // Если длительность не кратна 60 секундам, показываем в секундах, иначе в минутах
+    const isWholeMinutes = exercise.duration % 60 === 0;
+    const durationUnit: TimeUnit = isWholeMinutes ? 'minutes' : 'seconds';
+    const duration = isWholeMinutes 
+      ? secondsToMinutes(exercise.duration)
+      : exercise.duration;
+    setEditingExerciseData({ 
+      name: exercise.name, 
+      duration,
+      durationUnit
+    });
   };
 
   const handleCancelEdit = () => {
@@ -324,16 +342,21 @@ export const StageManager: React.FC<StageManagerProps> = ({
       alert('Название упражнения не может быть пустым');
       return;
     }
-    const duration = editingExerciseData.duration;
-    if (isNaN(duration) || duration <= 0) {
+    const durationValue = editingExerciseData.duration;
+    if (isNaN(durationValue) || durationValue <= 0) {
       alert('Длительность должна быть положительным числом');
       return;
     }
 
+    // Конвертируем в секунды в зависимости от выбранной единицы
+    const durationInSeconds = editingExerciseData.durationUnit === 'minutes'
+      ? minutesToSeconds(durationValue)
+      : Math.round(durationValue);
+
     const key = `update-exercise-${exerciseId}`;
     try {
       setProcessing(key, true);
-      await onUpdateExercise(stageId, exerciseId, editingExerciseData.name.trim(), duration);
+      await onUpdateExercise(stageId, exerciseId, editingExerciseData.name.trim(), durationInSeconds);
       handleCancelEdit();
     } catch (error) {
       console.error('Error updating exercise:', error);
@@ -415,13 +438,42 @@ export const StageManager: React.FC<StageManagerProps> = ({
                           />
                           <Input
                             type="number"
+                            step={editingExerciseData.durationUnit === 'minutes' ? '0.5' : '1'}
                             value={editingExerciseData.duration}
                             onChange={(e) =>
                               setEditingExerciseData({
                                 ...editingExerciseData,
-                                duration: parseInt(e.target.value) || 0,
+                                duration: parseFloat(e.target.value) || 0,
                               })
                             }
+                          />
+                          <Select
+                            value={editingExerciseData.durationUnit}
+                            options={[
+                              { value: 'minutes', label: 'мин.' },
+                              { value: 'seconds', label: 'сек.' },
+                            ]}
+                            onChange={(e) => {
+                              const newUnit = e.target.value as TimeUnit;
+                              const currentValue = editingExerciseData.duration;
+                              const currentUnit = editingExerciseData.durationUnit;
+                              // При смене единицы конвертируем значение
+                              let newValue: number;
+                              if (currentUnit === 'minutes' && newUnit === 'seconds') {
+                                // Минуты -> Секунды
+                                newValue = minutesToSeconds(currentValue);
+                              } else if (currentUnit === 'seconds' && newUnit === 'minutes') {
+                                // Секунды -> Минуты
+                                newValue = secondsToMinutes(currentValue);
+                              } else {
+                                newValue = currentValue;
+                              }
+                              setEditingExerciseData({
+                                ...editingExerciseData,
+                                durationUnit: newUnit,
+                                duration: newValue,
+                              });
+                            }}
                           />
                           <Button
                             size="sm"
@@ -443,7 +495,7 @@ export const StageManager: React.FC<StageManagerProps> = ({
                       ) : (
                         <>
                           <ExerciseName>{exercise.name}</ExerciseName>
-                          <ExerciseDetails>Длительность: {exercise.duration} мин</ExerciseDetails>
+                          <ExerciseDetails>Длительность: {formatDuration(exercise.duration)}</ExerciseDetails>
                         </>
                       )}
                     </ExerciseInfo>
@@ -478,20 +530,35 @@ export const StageManager: React.FC<StageManagerProps> = ({
                   onChange={(e) =>
                     setNewExerciseInputs((prev) => ({
                       ...prev,
-                      [stage.id]: { ...(prev[stage.id] || { name: '', duration: '' }), name: e.target.value },
+                      [stage.id]: { ...(prev[stage.id] || { name: '', duration: '', durationUnit: 'minutes' }), name: e.target.value },
                     }))
                   }
                 />
                 <Input
                   type="number"
-                  placeholder="Длительность (мин)"
+                  step={newExerciseInputs[stage.id]?.durationUnit === 'minutes' ? '0.5' : '1'}
+                  placeholder={`Длительность (${newExerciseInputs[stage.id]?.durationUnit === 'minutes' ? 'мин' : 'сек'})`}
                   value={newExerciseInputs[stage.id]?.duration || ''}
                   onChange={(e) =>
                     setNewExerciseInputs((prev) => ({
                       ...prev,
-                      [stage.id]: { ...(prev[stage.id] || { name: '', duration: '' }), duration: e.target.value },
+                      [stage.id]: { ...(prev[stage.id] || { name: '', duration: '', durationUnit: 'minutes' }), duration: e.target.value },
                     }))
                   }
+                />
+                <Select
+                  value={newExerciseInputs[stage.id]?.durationUnit || 'minutes'}
+                  options={[
+                    { value: 'minutes', label: 'мин.' },
+                    { value: 'seconds', label: 'сек.' },
+                  ]}
+                  onChange={(e) => {
+                    const newUnit = e.target.value as TimeUnit;
+                    setNewExerciseInputs((prev) => ({
+                      ...prev,
+                      [stage.id]: { ...(prev[stage.id] || { name: '', duration: '', durationUnit: 'minutes' }), durationUnit: newUnit },
+                    }));
+                  }}
                 />
                 <Button
                   onClick={() => handleAddExercise(stage.id)}

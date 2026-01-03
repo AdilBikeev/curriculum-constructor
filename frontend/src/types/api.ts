@@ -18,7 +18,7 @@ export interface ExerciseDto {
   id: string;
   stageId: string;
   name: string;
-  duration: number;
+  duration: number; // в секундах
   description?: string;
 }
 
@@ -30,13 +30,13 @@ export interface CreateStageRequest {
 export interface CreateExerciseRequest {
   stageId: string;
   name: string;
-  duration: number;
+  duration: number; // в секундах
   description?: string;
 }
 
 export interface UpdateExerciseRequest {
   name: string;
-  duration: number;
+  duration: number; // в секундах
   description?: string;
 }
 

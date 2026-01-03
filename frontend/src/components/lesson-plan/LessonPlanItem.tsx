@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { LessonPlanItem as LessonPlanItemType } from '../../types';
 import { Button } from '../common/Button';
 import { Card } from '../common/Card';
+import { formatDuration } from '../../utils/timeFormat';
 
 interface LessonPlanItemProps {
   item: LessonPlanItemType;
@@ -172,7 +173,7 @@ export const LessonPlanItemComponent: React.FC<LessonPlanItemProps> = ({
           <ItemSubtitle>
             {item.stageName}
             {startTime && <ItemTime>🕐 {startTime}</ItemTime>}
-            <ItemDuration>⏱️ {item.duration} мин</ItemDuration>
+            <ItemDuration>⏱️ {formatDuration(item.duration)}</ItemDuration>
           </ItemSubtitle>
         </ItemInfo>
       </ItemContent>

@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import styled from 'styled-components';
-import { LessonPlanItem, LessonStage, Exercise, LessonPlan } from '../../types';
+import { LessonPlanItem, LessonStage, Exercise, LessonPlan, LESSON_DURATION } from '../../types';
 import { StageSelectionModal } from './StageSelectionModal';
 import { AddExerciseToStageModal } from './AddExerciseToStageModal';
 import { AddStageButton } from './AddStageButton';
@@ -240,8 +240,8 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
   }, [sortedItems, planStageOrder]);
 
   const totalDuration = useMemo(() => calculateTotalDuration(items), [items]);
-  const isOverTime = totalDuration > 90;
-  const isNearLimit = totalDuration > 80 && totalDuration <= 90;
+  const isOverTime = totalDuration > LESSON_DURATION;
+  const isNearLimit = totalDuration > (LESSON_DURATION - 600) && totalDuration <= LESSON_DURATION; // 600 секунд = 10 минут
 
   // Вычисляем время начала для каждого элемента
   const itemStartTimes = useMemo(() => {

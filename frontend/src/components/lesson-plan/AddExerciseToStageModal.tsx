@@ -4,6 +4,7 @@ import { LessonStage } from '../../types';
 import { Button } from '../common/Button';
 import { Select } from '../common/Select';
 import { Card } from '../common/Card';
+import { formatDuration } from '../../utils/timeFormat';
 
 interface AddExerciseToStageModalProps {
   stage: LessonStage;
@@ -160,7 +161,7 @@ export const AddExerciseToStageModal: React.FC<AddExerciseToStageModalProps> = (
             {selectedExercise && (
               <ExerciseInfoWrapper>
                 <ExerciseInfo>
-                  ⏱️ Длительность: <span>{selectedExercise.duration} мин</span>
+                  ⏱️ Длительность: <span>{formatDuration(selectedExercise.duration)}</span>
                 </ExerciseInfo>
               </ExerciseInfoWrapper>
             )}
