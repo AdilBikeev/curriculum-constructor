@@ -537,7 +537,7 @@ export const StageManager: React.FC<StageManagerProps> = ({
                 <Input
                   type="number"
                   step={newExerciseInputs[stage.id]?.durationUnit === 'minutes' ? '0.5' : '1'}
-                  placeholder={`Длительность (${newExerciseInputs[stage.id]?.durationUnit === 'minutes' ? 'мин' : 'сек'})`}
+                  placeholder="Длительность"
                   value={newExerciseInputs[stage.id]?.duration || ''}
                   onChange={(e) =>
                     setNewExerciseInputs((prev) => ({
