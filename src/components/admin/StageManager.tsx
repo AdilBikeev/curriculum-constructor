@@ -25,14 +25,51 @@ const StageHeader = styled.div`
   display: flex;
   flex-direction: column;
   gap: ${({ theme }) => theme.spacing.md};
-  margin-bottom: ${({ theme }) => theme.spacing.lg};
-  padding-bottom: ${({ theme }) => theme.spacing.md};
+  margin-bottom: ${({ theme }) => theme.spacing.sm};
+  padding: ${({ theme }) => theme.spacing.md};
+  background-color: ${({ theme }) => theme.colors.white};
+  border-radius: ${({ theme }) => theme.borderRadius.md};
   border-bottom: 2px solid ${({ theme }) => theme.colors.gray};
+  cursor: pointer;
+  user-select: none;
+  transition: background-color ${({ theme }) => theme.transitions.normal};
+
+  &:hover {
+    background-color: ${({ theme }) => theme.colors.lightGray};
+  }
 
   @media (min-width: ${({ theme }) => theme.breakpoints.tablet}) {
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
+  }
+`;
+
+const StageHeaderLeft = styled.div`
+  display: flex;
+  align-items: center;
+  gap: ${({ theme }) => theme.spacing.sm};
+  flex: 1;
+  min-width: 0;
+`;
+
+const StageIcon = styled.div<{ $isExpanded: boolean }>`
+  font-size: 1.25rem;
+  flex-shrink: 0;
+  transition: transform ${({ theme }) => theme.transitions.normal};
+  transform: ${({ $isExpanded }) => ($isExpanded ? 'rotate(90deg)' : 'rotate(0deg)')};
+`;
+
+const StageHeaderActions = styled.div`
+  display: flex;
+  gap: ${({ theme }) => theme.spacing.sm};
+  align-items: center;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 10;
+  
+  @media (min-width: ${({ theme }) => theme.breakpoints.tablet}) {
+    flex-direction: row;
   }
 `;
 
@@ -51,7 +88,13 @@ const ExerciseList = styled.div`
   display: flex;
   flex-direction: column;
   gap: ${({ theme }) => theme.spacing.md};
-  margin-top: ${({ theme }) => theme.spacing.lg};
+  margin-top: ${({ theme }) => theme.spacing.md};
+  padding-left: ${({ theme }) => theme.spacing.md};
+  padding-right: ${({ theme }) => theme.spacing.md};
+`;
+
+const StageContent = styled.div<{ $isExpanded: boolean }>`
+  display: ${({ $isExpanded }) => ($isExpanded ? 'block' : 'none')};
 `;
 
 const ExerciseItem = styled.div`
@@ -150,6 +193,7 @@ export const StageManager: React.FC<StageManagerProps> = ({ stages, onUpdate }) 
   const [newStageName, setNewStageName] = useState('');
   const [newExerciseName, setNewExerciseName] = useState('');
   const [newExerciseDuration, setNewExerciseDuration] = useState('');
+  const [expandedStages, setExpandedStages] = useState<Set<string>>(new Set());
 
   const handleAddStage = () => {
     if (!newStageName.trim()) return;
@@ -190,8 +234,23 @@ export const StageManager: React.FC<StageManagerProps> = ({ stages, onUpdate }) 
       )
     );
 
+    // Разворачиваем стадию при добавлении нового упражнения
+    setExpandedStages((prev) => new Set(prev).add(stageId));
+
     setNewExerciseName('');
     setNewExerciseDuration('');
+  };
+
+  const handleToggleStage = (stageId: string) => {
+    setExpandedStages((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(stageId)) {
+        newSet.delete(stageId);
+      } else {
+        newSet.add(stageId);
+      }
+      return newSet;
+    });
   };
 
   const handleDeleteExercise = (stageId: string, exerciseId: string) => {
@@ -256,102 +315,118 @@ export const StageManager: React.FC<StageManagerProps> = ({ stages, onUpdate }) 
         </FormRow>
       </AddStageCard>
 
-      {stages.map((stage) => (
-        <StageCard key={stage.id}>
-          <StageHeader>
-            <StageTitle>{stage.name}</StageTitle>
-            <Button variant="danger" size="sm" onClick={() => handleDeleteStage(stage.id)}>
-              Удалить стадию
-            </Button>
-          </StageHeader>
-
-          <ExerciseList>
-            {stage.exercises.map((exercise) => (
-              <ExerciseItem key={exercise.id}>
-                <ExerciseInfo>
-                  {editingExerciseId === exercise.id && editingExerciseData ? (
-                    <FormRowEdit>
-                      <Input
-                        value={editingExerciseData.name}
-                        onChange={(e) =>
-                          setEditingExerciseData({
-                            ...editingExerciseData,
-                            name: e.target.value,
-                          })
-                        }
-                        autoFocus
-                      />
-                      <Input
-                        type="number"
-                        value={editingExerciseData.duration}
-                        onChange={(e) =>
-                          setEditingExerciseData({
-                            ...editingExerciseData,
-                            duration: parseInt(e.target.value) || 0,
-                          })
-                        }
-                      />
-                      <Button
-                        size="sm"
-                        onClick={() => handleSaveEdit(stage.id, exercise.id)}
-                        variant="success"
-                      >
-                        ✓
-                      </Button>
-                      <Button size="sm" onClick={handleCancelEdit} variant="secondary">
-                        ✕
-                      </Button>
-                    </FormRowEdit>
-                  ) : (
-                    <>
-                      <ExerciseName>{exercise.name}</ExerciseName>
-                      <ExerciseDetails>Длительность: {exercise.duration} мин</ExerciseDetails>
-                    </>
-                  )}
-                </ExerciseInfo>
-                {editingExerciseId !== exercise.id && (
-                  <ExerciseActionsWrapper>
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      onClick={() => handleStartEdit(exercise)}
-                    >
-                      Редактировать
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="danger"
-                      onClick={() => handleDeleteExercise(stage.id, exercise.id)}
-                    >
-                      Удалить
-                    </Button>
-                  </ExerciseActionsWrapper>
-                )}
-              </ExerciseItem>
-            ))}
-          </ExerciseList>
-
-          <FormRow style={{ marginTop: '1rem' }}>
-            <Input
-              placeholder="Название упражнения"
-              value={newExerciseName}
-              onChange={(e) => setNewExerciseName(e.target.value)}
-            />
-            <Input
-              type="number"
-              placeholder="Длительность (мин)"
-              value={newExerciseDuration}
-              onChange={(e) => setNewExerciseDuration(e.target.value)}
-            />
-            <Button
-              onClick={() => handleAddExercise(stage.id)}
-              disabled={!newExerciseName.trim() || !newExerciseDuration}
+      {stages.map((stage) => {
+        const isExpanded = expandedStages.has(stage.id);
+        return (
+          <StageCard key={stage.id}>
+            <StageHeader
+              onClick={() => handleToggleStage(stage.id)}
             >
-              Добавить
-            </Button>
-          </FormRow>
-        </StageCard>
-      ))}
+              <StageHeaderLeft>
+                <StageIcon $isExpanded={isExpanded}>▶</StageIcon>
+                <StageTitle>{stage.name}</StageTitle>
+              </StageHeaderLeft>
+              <StageHeaderActions
+                onClick={(e: React.MouseEvent<HTMLDivElement>) => {
+                  e.stopPropagation();
+                }}
+              >
+                <Button variant="danger" size="sm" onClick={() => handleDeleteStage(stage.id)}>
+                  Удалить стадию
+                </Button>
+              </StageHeaderActions>
+            </StageHeader>
+
+            <StageContent $isExpanded={isExpanded}>
+              <ExerciseList>
+                {stage.exercises.map((exercise) => (
+                  <ExerciseItem key={exercise.id}>
+                    <ExerciseInfo>
+                      {editingExerciseId === exercise.id && editingExerciseData ? (
+                        <FormRowEdit>
+                          <Input
+                            value={editingExerciseData.name}
+                            onChange={(e) =>
+                              setEditingExerciseData({
+                                ...editingExerciseData,
+                                name: e.target.value,
+                              })
+                            }
+                            autoFocus
+                          />
+                          <Input
+                            type="number"
+                            value={editingExerciseData.duration}
+                            onChange={(e) =>
+                              setEditingExerciseData({
+                                ...editingExerciseData,
+                                duration: parseInt(e.target.value) || 0,
+                              })
+                            }
+                          />
+                          <Button
+                            size="sm"
+                            onClick={() => handleSaveEdit(stage.id, exercise.id)}
+                            variant="success"
+                          >
+                            ✓
+                          </Button>
+                          <Button size="sm" onClick={handleCancelEdit} variant="secondary">
+                            ✕
+                          </Button>
+                        </FormRowEdit>
+                      ) : (
+                        <>
+                          <ExerciseName>{exercise.name}</ExerciseName>
+                          <ExerciseDetails>Длительность: {exercise.duration} мин</ExerciseDetails>
+                        </>
+                      )}
+                    </ExerciseInfo>
+                    {editingExerciseId !== exercise.id && (
+                      <ExerciseActionsWrapper>
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => handleStartEdit(exercise)}
+                        >
+                          Редактировать
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="danger"
+                          onClick={() => handleDeleteExercise(stage.id, exercise.id)}
+                        >
+                          Удалить
+                        </Button>
+                      </ExerciseActionsWrapper>
+                    )}
+                  </ExerciseItem>
+                ))}
+              </ExerciseList>
+
+              <FormRow style={{ marginTop: '1rem', paddingLeft: '1rem', paddingRight: '1rem' }}>
+                <Input
+                  placeholder="Название упражнения"
+                  value={newExerciseName}
+                  onChange={(e) => setNewExerciseName(e.target.value)}
+                />
+                <Input
+                  type="number"
+                  placeholder="Длительность (мин)"
+                  value={newExerciseDuration}
+                  onChange={(e) => setNewExerciseDuration(e.target.value)}
+                />
+                <Button
+                  onClick={() => handleAddExercise(stage.id)}
+                  disabled={!newExerciseName.trim() || !newExerciseDuration}
+                >
+                  Добавить
+                </Button>
+              </FormRow>
+            </StageContent>
+          </StageCard>
+        );
+      })}
     </ManagerContainer>
   );
 };
