@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { LessonStage } from '../types';
 import { mockStages } from '../data/mockData';
 import { stagesApi, exercisesApi } from '../services/stagesApi';
@@ -28,25 +28,7 @@ export const StagesProvider: React.FC<StagesProviderProps> = ({ children, useApi
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Загрузка данных при монтировании только для режима без API
-  useEffect(() => {
-    if (!useApi) {
-      // Загружаем из localStorage или используем мок-данные
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        try {
-          setStages(JSON.parse(saved));
-        } catch {
-          setStages(mockStages);
-        }
-      } else {
-        setStages(mockStages);
-      }
-    }
-    // При useApi=true данные загружаются только по требованию (через refreshStages)
-  }, [useApi]);
-
-  const loadStagesFromApi = async () => {
+  const loadStagesFromApi = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -62,7 +44,27 @@ export const StagesProvider: React.FC<StagesProviderProps> = ({ children, useApi
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
+
+  // Загрузка данных при монтировании
+  useEffect(() => {
+    if (!useApi) {
+      // Загружаем из localStorage или используем мок-данные
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try {
+          setStages(JSON.parse(saved));
+        } catch {
+          setStages(mockStages);
+        }
+      } else {
+        setStages(mockStages);
+      }
+    } else {
+      // При useApi=true автоматически загружаем данные из API
+      loadStagesFromApi();
+    }
+  }, [useApi, loadStagesFromApi]);
 
   useEffect(() => {
     // Сохраняем в localStorage только если не используем API
