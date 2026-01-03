@@ -198,8 +198,7 @@ export const StageManager: React.FC<StageManagerProps> = ({ stages, onUpdate }) 
     duration: number;
   } | null>(null);
   const [newStageName, setNewStageName] = useState('');
-  const [newExerciseName, setNewExerciseName] = useState('');
-  const [newExerciseDuration, setNewExerciseDuration] = useState('');
+  const [newExerciseInputs, setNewExerciseInputs] = useState<Record<string, { name: string; duration: string }>>({});
   const [expandedStages, setExpandedStages] = useState<Set<string>>(new Set());
 
   const handleAddStage = () => {
@@ -222,14 +221,15 @@ export const StageManager: React.FC<StageManagerProps> = ({ stages, onUpdate }) 
   };
 
   const handleAddExercise = (stageId: string) => {
-    if (!newExerciseName.trim() || !newExerciseDuration) return;
+    const inputs = newExerciseInputs[stageId];
+    if (!inputs || !inputs.name.trim() || !inputs.duration) return;
 
-    const duration = parseInt(newExerciseDuration);
+    const duration = parseInt(inputs.duration);
     if (isNaN(duration) || duration <= 0) return;
 
     const newExercise: Exercise = {
       id: `ex-${Date.now()}`,
-      name: newExerciseName.trim(),
+      name: inputs.name.trim(),
       duration,
     };
 
@@ -244,8 +244,11 @@ export const StageManager: React.FC<StageManagerProps> = ({ stages, onUpdate }) 
     // Разворачиваем стадию при добавлении нового упражнения
     setExpandedStages((prev) => new Set(prev).add(stageId));
 
-    setNewExerciseName('');
-    setNewExerciseDuration('');
+    // Очищаем поля ввода для этой стадии
+    setNewExerciseInputs((prev) => ({
+      ...prev,
+      [stageId]: { name: '', duration: '' },
+    }));
   };
 
   const handleToggleStage = (stageId: string) => {
@@ -414,18 +417,28 @@ export const StageManager: React.FC<StageManagerProps> = ({ stages, onUpdate }) 
               <FormRow style={{ marginTop: '0.5rem', paddingLeft: '0.5rem', paddingRight: '0.5rem' }}>
                 <Input
                   placeholder="Название упражнения"
-                  value={newExerciseName}
-                  onChange={(e) => setNewExerciseName(e.target.value)}
+                  value={newExerciseInputs[stage.id]?.name || ''}
+                  onChange={(e) =>
+                    setNewExerciseInputs((prev) => ({
+                      ...prev,
+                      [stage.id]: { ...(prev[stage.id] || { name: '', duration: '' }), name: e.target.value },
+                    }))
+                  }
                 />
                 <Input
                   type="number"
                   placeholder="Длительность (мин)"
-                  value={newExerciseDuration}
-                  onChange={(e) => setNewExerciseDuration(e.target.value)}
+                  value={newExerciseInputs[stage.id]?.duration || ''}
+                  onChange={(e) =>
+                    setNewExerciseInputs((prev) => ({
+                      ...prev,
+                      [stage.id]: { ...(prev[stage.id] || { name: '', duration: '' }), duration: e.target.value },
+                    }))
+                  }
                 />
                 <Button
                   onClick={() => handleAddExercise(stage.id)}
-                  disabled={!newExerciseName.trim() || !newExerciseDuration}
+                  disabled={!newExerciseInputs[stage.id]?.name?.trim() || !newExerciseInputs[stage.id]?.duration}
                 >
                   Добавить
                 </Button>
