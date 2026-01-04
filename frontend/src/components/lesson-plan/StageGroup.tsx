@@ -180,9 +180,29 @@ const StageDurationWrapper = styled.div`
   margin-left: auto;
 `;
 
-const AddExerciseButton = styled(Button)`
+const AddExerciseButton = styled.button`
+  padding: ${({ theme }) => theme.spacing.xs} ${({ theme }) => theme.spacing.sm};
+  border: 1px dashed ${({ theme }) => theme.colors.gray};
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  background: transparent;
+  color: ${({ theme }) => theme.colors.secondary};
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all ${({ theme }) => theme.transitions.normal};
+  opacity: 0.6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: ${({ theme }) => theme.spacing.xs};
   width: 100%;
-  margin-top: ${({ theme }) => theme.spacing.sm};
+  margin-top: ${({ theme }) => theme.spacing.xs};
+  
+  &:hover {
+    opacity: 1;
+    border-color: ${({ theme }) => theme.colors.primary};
+    color: ${({ theme }) => theme.colors.primary};
+    background: rgba(99, 102, 241, 0.05);
+  }
 `;
 
 export const StageGroup: React.FC<StageGroupProps> = ({
@@ -294,8 +314,6 @@ export const StageGroup: React.FC<StageGroupProps> = ({
         ))}
         {isExpanded && !isReadOnly && onAddExercise && (
           <AddExerciseButton
-            variant="secondary"
-            size="sm"
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -303,8 +321,9 @@ export const StageGroup: React.FC<StageGroupProps> = ({
                 onAddExercise(stageId);
               }
             }}
+            title="Добавить упражнение"
           >
-            ➕ Добавить упражнение
+            ➕
           </AddExerciseButton>
         )}
       </StageItemsList>
