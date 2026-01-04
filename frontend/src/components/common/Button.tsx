@@ -63,7 +63,6 @@ const StyledButton = styled.button<{ $variant: string; $size: string }>`
         '&:hover': { 
           background: theme.colors.primaryDark,
           boxShadow: theme.shadows.lg,
-          transform: 'translateY(-2px)',
         },
       },
       secondary: {
@@ -72,7 +71,6 @@ const StyledButton = styled.button<{ $variant: string; $size: string }>`
         '&:hover': { 
           background: theme.colors.secondaryDark,
           boxShadow: theme.shadows.lg,
-          transform: 'translateY(-2px)',
         },
       },
       danger: {
@@ -81,7 +79,6 @@ const StyledButton = styled.button<{ $variant: string; $size: string }>`
         '&:hover': { 
           background: theme.colors.dangerLight,
           boxShadow: theme.shadows.lg,
-          transform: 'translateY(-2px)',
         },
       },
       success: {
@@ -90,7 +87,6 @@ const StyledButton = styled.button<{ $variant: string; $size: string }>`
         '&:hover': { 
           background: theme.colors.successLight,
           boxShadow: theme.shadows.lg,
-          transform: 'translateY(-2px)',
         },
       },
     };
@@ -102,7 +98,6 @@ const StyledButton = styled.button<{ $variant: string; $size: string }>`
       &:hover {
         background: ${hoverStyles.background};
         box-shadow: ${hoverStyles.boxShadow};
-        transform: ${hoverStyles.transform};
       }
       &:disabled {
         opacity: 0.5;

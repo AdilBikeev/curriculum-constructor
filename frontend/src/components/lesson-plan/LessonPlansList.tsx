@@ -3,7 +3,6 @@ import styled from 'styled-components';
 import { lessonPlansApi } from '../../services/stagesApi';
 import { LessonPlanDto } from '../../types/api';
 import { LessonPlan } from '../../types';
-import { Button } from '../common/Button';
 import { formatDuration } from '../../utils/timeFormat';
 
 interface LessonPlansListProps {
@@ -19,20 +18,6 @@ const PlansListContainer = styled.div`
   box-sizing: border-box;
 `;
 
-const PlansListHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: ${({ theme }) => theme.spacing.xs};
-`;
-
-const PlansListTitle = styled.h3`
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: ${({ theme }) => theme.colors.dark};
-  margin: 0;
-  flex: 1;
-`;
 
 const PlanItem = styled.div<{ $isSelected: boolean }>`
   padding: ${({ theme }) => theme.spacing.sm} ${({ theme }) => theme.spacing.md};
@@ -47,8 +32,7 @@ const PlanItem = styled.div<{ $isSelected: boolean }>`
   &:hover {
     border-color: ${({ theme }) => theme.colors.primary};
     background: rgba(99, 102, 241, 0.05);
-    transform: translateY(-1px);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
 `;
 
@@ -102,16 +86,6 @@ const PlansListContent = styled.div`
   width: 100%;
 `;
 
-const RefreshButton = styled(Button)`
-  padding: ${({ theme }) => theme.spacing.xs} ${({ theme }) => theme.spacing.sm};
-  font-size: 0.75rem;
-  min-width: auto;
-
-  @media (min-width: ${({ theme }) => theme.breakpoints.desktop}) {
-    padding: ${({ theme }) => theme.spacing.sm} ${({ theme }) => theme.spacing.md};
-    font-size: 0.875rem;
-  }
-`;
 
 /**
  * Преобразует LessonPlanDto в LessonPlan
@@ -177,22 +151,12 @@ export const LessonPlansList: React.FC<LessonPlansListProps> = ({ onPlanSelect, 
 
   return (
     <PlansListContainer>
-      <PlansListHeader>
-        <PlansListTitle>Планы</PlansListTitle>
-        <RefreshButton variant="secondary" size="sm" onClick={loadPlans} disabled={isLoading} style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}>
-          🔄
-        </RefreshButton>
-      </PlansListHeader>
 
       {isLoading && <LoadingState>Загрузка...</LoadingState>}
 
       {error && (
         <ErrorState>
           {error}
-          <br />
-          <RefreshButton variant="secondary" size="sm" onClick={loadPlans} style={{ marginTop: '0.5rem' }}>
-            Попробовать снова
-          </RefreshButton>
         </ErrorState>
       )}
 

@@ -25,7 +25,6 @@ const StyledCard = styled.div<{ $clickable: boolean }>`
     cursor: pointer;
     &:hover {
       box-shadow: ${theme.shadows.lg};
-      transform: translateY(-4px);
       border-color: ${theme.colors.primaryLight};
     }
   `}
