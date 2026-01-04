@@ -11,40 +11,34 @@ interface TimeIndicatorProps {
 const TimeIndicatorWrapper = styled.div`
   display: flex;
   flex-direction: column;
-  gap: ${({ theme }) => theme.spacing.sm};
+  gap: ${({ theme }) => theme.spacing.xs};
 `;
 
 const TimeInfo = styled.div`
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
   gap: ${({ theme }) => theme.spacing.xs};
-  font-size: 0.9375rem;
+  font-size: 0.75rem;
   font-weight: 600;
-
-  @media (min-width: ${({ theme }) => theme.breakpoints.mobile}) {
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 1rem;
-  }
 `;
 
 const TimeLabel = styled.span`
   color: ${({ theme }) => theme.colors.secondary};
+  font-size: 0.75rem;
 `;
 
 const TimeValue = styled.span<{ $isOver: boolean }>`
   color: ${({ theme, $isOver }) => ($isOver ? theme.colors.danger : theme.colors.primary)};
-  font-size: 1rem;
-
-  @media (min-width: ${({ theme }) => theme.breakpoints.mobile}) {
-    font-size: 1.125rem;
-  }
+  font-size: 0.8125rem;
+  font-weight: 700;
+  white-space: nowrap;
 `;
 
 const ProgressBar = styled.div`
   width: 100%;
-  height: 12px;
+  height: 8px;
   background-color: ${({ theme }) => theme.colors.lightGray};
   border-radius: ${({ theme }) => theme.borderRadius.full};
   overflow: hidden;
@@ -91,10 +85,11 @@ const ProgressFill = styled.div<{ $percentage: number; $isOver: boolean }>`
 `;
 
 const TimeText = styled.div`
-  font-size: 0.8125rem;
+  font-size: 0.6875rem;
   color: ${({ theme }) => theme.colors.secondary};
   text-align: center;
   font-weight: 500;
+  line-height: 1.2;
 `;
 
 export const TimeIndicator: React.FC<TimeIndicatorProps> = ({
@@ -108,7 +103,7 @@ export const TimeIndicator: React.FC<TimeIndicatorProps> = ({
   return (
     <TimeIndicatorWrapper>
       <TimeInfo>
-        <TimeLabel>Использовано времени:</TimeLabel>
+        <TimeLabel>Время:</TimeLabel>
         <TimeValue $isOver={isOver}>
           {formatDuration(usedTime)} / {formatDuration(totalTime)}
         </TimeValue>

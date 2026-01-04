@@ -16,16 +16,16 @@ const InputWrapper = styled.div`
 `;
 
 const Label = styled.label`
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   font-weight: 500;
   color: ${({ theme }) => theme.colors.dark};
 `;
 
 const StyledInput = styled.input<{ $hasError: boolean }>`
-  padding: ${({ theme }) => `${theme.spacing.md} ${theme.spacing.lg}`};
-  border: 2px solid ${({ theme, $hasError }) => ($hasError ? theme.colors.danger : theme.colors.gray)};
+  padding: ${({ theme }) => `${theme.spacing.xs} ${theme.spacing.sm}`};
+  border: 1px solid ${({ theme, $hasError }) => ($hasError ? theme.colors.danger : theme.colors.gray)};
   border-radius: ${({ theme }) => theme.borderRadius.md};
-  font-size: 1rem;
+  font-size: 0.875rem;
   font-family: inherit;
   transition: all ${({ theme }) => theme.transitions.normal};
   background-color: ${({ theme }) => theme.colors.white};
@@ -34,7 +34,7 @@ const StyledInput = styled.input<{ $hasError: boolean }>`
   &:focus {
     outline: none;
     border-color: ${({ theme, $hasError }) => ($hasError ? theme.colors.danger : theme.colors.primary)};
-    box-shadow: 0 0 0 3px ${({ theme, $hasError }) => ($hasError ? 'rgba(239, 68, 68, 0.1)' : 'rgba(99, 102, 241, 0.1)')};
+    box-shadow: 0 0 0 2px ${({ theme, $hasError }) => ($hasError ? 'rgba(239, 68, 68, 0.1)' : 'rgba(99, 102, 241, 0.1)')};
   }
 
   &:disabled {

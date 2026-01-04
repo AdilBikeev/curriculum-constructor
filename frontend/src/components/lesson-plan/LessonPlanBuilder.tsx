@@ -101,16 +101,6 @@ const EmptyDescription = styled.p`
   color: ${({ theme }) => theme.colors.secondary};
 `;
 
-const ActionsCard = styled(Card)`
-  display: flex;
-  flex-direction: column;
-  gap: ${({ theme }) => theme.spacing.sm};
-  padding: ${({ theme }) => theme.spacing.sm} ${({ theme }) => theme.spacing.md} !important;
-
-  @media (min-width: ${({ theme }) => theme.breakpoints.tablet}) {
-    padding: ${({ theme }) => theme.spacing.md} !important;
-  }
-`;
 
 const AutoSaveIndicator = styled.div`
   font-size: 0.75rem;
@@ -151,6 +141,20 @@ const CompactSectionTitle = styled(SectionTitle)`
   font-weight: 600;
 `;
 
+const PlanTitleSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: ${({ theme }) => theme.spacing.sm};
+  margin-bottom: ${({ theme }) => theme.spacing.md};
+`;
+
+const PlanTitleRow = styled.div`
+  display: flex;
+  gap: ${({ theme }) => theme.spacing.sm};
+  align-items: flex-start;
+  flex-wrap: wrap;
+`;
+
 const PlanTitleInput = styled.input`
   padding: ${({ theme }) => theme.spacing.sm} ${({ theme }) => theme.spacing.md};
   border: 2px solid ${({ theme }) => theme.colors.gray};
@@ -159,13 +163,21 @@ const PlanTitleInput = styled.input`
   font-family: inherit;
   transition: all ${({ theme }) => theme.transitions.normal};
   background-color: ${({ theme }) => theme.colors.white};
-  width: 100%;
+  flex: 1;
+  min-width: 200px;
 
   &:focus {
     outline: none;
     border-color: ${({ theme }) => theme.colors.primary};
     box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
   }
+`;
+
+const PlanActionsRow = styled.div`
+  display: flex;
+  gap: ${({ theme }) => theme.spacing.sm};
+  align-items: center;
+  flex-wrap: wrap;
 `;
 
 const WarningMessage = styled.div<{ $isError: boolean }>`
@@ -651,19 +663,56 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
         <CompactCard>
           <SectionTitle>📋 План урока</SectionTitle>
           {items.length > 0 && (
-            <>
-              <PlanTitleInput
-                type="text"
-                placeholder="Название плана урока..."
-                value={planTitle}
-                onChange={(e) => handleTitleChange(e.target.value)}
-              />
+            <PlanTitleSection>
+              <PlanTitleRow>
+                <PlanTitleInput
+                  type="text"
+                  placeholder="Название плана урока..."
+                  value={planTitle}
+                  onChange={(e) => handleTitleChange(e.target.value)}
+                />
+                <PlanActionsRow>
+                  <Button 
+                    onClick={handleSave} 
+                    disabled={stageOrder.length === 0 || isOverTime || !!titleError || isSaving} 
+                    size="sm"
+                    title={isSaving ? 'Сохранение...' : 'Сохранить план'}
+                    style={{ 
+                      padding: '0.5rem',
+                      minWidth: 'auto',
+                      width: 'auto',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}
+                  >
+                    {isSaving ? '⏳' : '💾'}
+                  </Button>
+                  <Button 
+                    variant="secondary" 
+                    onClick={handleClear} 
+                    disabled={stageOrder.length === 0} 
+                    size="sm"
+                    title="Очистить план"
+                    style={{ 
+                      padding: '0.5rem',
+                      minWidth: 'auto',
+                      width: 'auto',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}
+                  >
+                    🗑️
+                  </Button>
+                </PlanActionsRow>
+              </PlanTitleRow>
               {titleError && (
                 <WarningMessage $isError={true}>
                   {titleError}
                 </WarningMessage>
               )}
-            </>
+            </PlanTitleSection>
           )}
           {stageOrder.length === 0 ? (
             <EmptyState>
@@ -711,34 +760,25 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
 
       <Sidebar>
         <CollapsibleSection title="Время занятия" icon="⏱️" defaultExpanded={true}>
-          <div style={{ marginBottom: '0.75rem' }}>
+          <div style={{ marginBottom: '0.5rem' }}>
             <TimeInput
-              label="Время начала"
+              label="Начало"
               value={lessonStartTime}
               onChange={(value) => setLessonStartTime(value)}
             />
           </div>
           <TimeIndicator usedTime={totalDuration} />
           {isOverTime && (
-            <WarningMessage $isError={true} style={{ marginTop: '0.5rem', fontSize: '0.8125rem', padding: '0.5rem' }}>
-              ⚠️ Превышено время!
+            <WarningMessage $isError={true} style={{ marginTop: '0.5rem', fontSize: '0.75rem', padding: '0.375rem 0.5rem' }}>
+              ⚠️ Превышено
             </WarningMessage>
           )}
           {isNearLimit && !isOverTime && (
-            <WarningMessage $isError={false} style={{ marginTop: '0.5rem', fontSize: '0.8125rem', padding: '0.5rem' }}>
-              ⚡ Осталось мало времени
+            <WarningMessage $isError={false} style={{ marginTop: '0.5rem', fontSize: '0.75rem', padding: '0.375rem 0.5rem' }}>
+              ⚡ Мало времени
             </WarningMessage>
           )}
         </CollapsibleSection>
-
-        <ActionsCard>
-          <Button onClick={handleSave} disabled={stageOrder.length === 0 || isOverTime || !!titleError || isSaving} size="sm">
-            {isSaving ? '💾 Сохранение...' : '💾 Сохранить'}
-          </Button>
-          <Button variant="secondary" onClick={handleClear} disabled={stageOrder.length === 0} size="sm">
-            🗑️ Очистить
-          </Button>
-        </ActionsCard>
 
         <CollapsibleSection title="Сохраненные планы" icon="📚" defaultExpanded={false}>
           <LessonPlansList onPlanSelect={handlePlanSelect} selectedPlanId={selectedPlanId} />
