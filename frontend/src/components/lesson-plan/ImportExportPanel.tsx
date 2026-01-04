@@ -15,25 +15,26 @@ interface ImportExportPanelProps {
   onPlanImported: (plan: LessonPlan) => void;
 }
 
-const PanelCard = styled(Card)`
-  padding: ${({ theme }) => theme.spacing.md} !important;
-  margin-top: ${({ theme }) => theme.spacing.md};
+const PanelCard = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: ${({ theme }) => theme.spacing.sm};
 `;
 
 const PanelTitle = styled.h3`
-  font-size: 1rem;
-  font-weight: 700;
+  font-size: 0.875rem;
+  font-weight: 600;
   color: ${({ theme }) => theme.colors.dark};
-  margin-bottom: ${({ theme }) => theme.spacing.md};
+  margin-bottom: ${({ theme }) => theme.spacing.xs};
   display: flex;
   align-items: center;
-  gap: ${({ theme }) => theme.spacing.sm};
+  gap: ${({ theme }) => theme.spacing.xs};
 `;
 
 const ButtonGroup = styled.div`
   display: flex;
   flex-direction: column;
-  gap: ${({ theme }) => theme.spacing.sm};
+  gap: ${({ theme }) => theme.spacing.xs};
 `;
 
 const TextArea = styled.textarea`
@@ -187,8 +188,6 @@ export const ImportExportPanel: React.FC<ImportExportPanelProps> = ({
 
   return (
     <PanelCard>
-      <PanelTitle>📤 Импорт / Экспорт</PanelTitle>
-      
       <ButtonGroup>
         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
           <Button

@@ -26,6 +26,7 @@ import {
 } from '../../utils/storage';
 import { ImportExportPanel } from './ImportExportPanel';
 import { LessonPlansList } from './LessonPlansList';
+import { CollapsibleSection } from './CollapsibleSection';
 import { lessonPlansApi } from '../../services/stagesApi';
 import { CreateLessonPlanRequest } from '../../types/api';
 
@@ -42,8 +43,8 @@ const BuilderContainer = styled.div`
   gap: ${({ theme }) => theme.spacing.lg};
 
   @media (min-width: ${({ theme }) => theme.breakpoints.desktop}) {
-    grid-template-columns: 1fr 420px;
-    gap: ${({ theme }) => theme.spacing.xl};
+    grid-template-columns: 1fr 320px;
+    gap: ${({ theme }) => theme.spacing.lg};
   }
 `;
 
@@ -56,7 +57,7 @@ const MainContent = styled.div`
 const Sidebar = styled.div`
   display: flex;
   flex-direction: column;
-  gap: ${({ theme }) => theme.spacing.lg};
+  gap: ${({ theme }) => theme.spacing.md};
   position: sticky;
   top: ${({ theme }) => theme.spacing.lg};
   height: fit-content;
@@ -105,11 +106,11 @@ const EmptyDescription = styled.p`
 const ActionsCard = styled(Card)`
   display: flex;
   flex-direction: column;
-  gap: ${({ theme }) => theme.spacing.md};
-  padding: ${({ theme }) => theme.spacing.md} !important;
+  gap: ${({ theme }) => theme.spacing.sm};
+  padding: ${({ theme }) => theme.spacing.sm} ${({ theme }) => theme.spacing.md} !important;
 
   @media (min-width: ${({ theme }) => theme.breakpoints.tablet}) {
-    padding: ${({ theme }) => theme.spacing.lg} !important;
+    padding: ${({ theme }) => theme.spacing.md} !important;
   }
 `;
 
@@ -123,10 +124,10 @@ const AutoSaveIndicator = styled.div`
 `;
 
 const CompactCard = styled(Card)`
-  padding: ${({ theme }) => theme.spacing.md} !important;
+  padding: ${({ theme }) => theme.spacing.sm} ${({ theme }) => theme.spacing.md} !important;
 
   @media (min-width: ${({ theme }) => theme.breakpoints.tablet}) {
-    padding: ${({ theme }) => theme.spacing.lg} !important;
+    padding: ${({ theme }) => theme.spacing.md} !important;
   }
 `;
 
@@ -147,8 +148,9 @@ const SectionTitle = styled.h2`
 `;
 
 const CompactSectionTitle = styled(SectionTitle)`
-  font-size: 1rem;
-  margin-bottom: ${({ theme }) => theme.spacing.md};
+  font-size: 0.9375rem;
+  margin-bottom: ${({ theme }) => theme.spacing.sm};
+  font-weight: 600;
 `;
 
 const PlanTitleInput = styled.input`
@@ -710,45 +712,46 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
       </MainContent>
 
       <Sidebar>
-        <CompactCard>
-          <CompactSectionTitle>
-            ⏱️ Время занятия
-          </CompactSectionTitle>
-          <div style={{ marginBottom: '1rem' }}>
+        <CollapsibleSection title="Время занятия" icon="⏱️" defaultExpanded={true}>
+          <div style={{ marginBottom: '0.75rem' }}>
             <TimeInput
-              label="Время начала занятия"
+              label="Время начала"
               value={lessonStartTime}
               onChange={(value) => setLessonStartTime(value)}
             />
           </div>
           <TimeIndicator usedTime={totalDuration} />
           {isOverTime && (
-            <WarningMessage $isError={true}>
-              ⚠️ Превышено время занятия! Удалите некоторые упражнения.
+            <WarningMessage $isError={true} style={{ marginTop: '0.5rem', fontSize: '0.8125rem', padding: '0.5rem' }}>
+              ⚠️ Превышено время!
             </WarningMessage>
           )}
           {isNearLimit && !isOverTime && (
-            <WarningMessage $isError={false}>
-              ⚡ Осталось мало времени. Будьте внимательны при добавлении новых упражнений.
+            <WarningMessage $isError={false} style={{ marginTop: '0.5rem', fontSize: '0.8125rem', padding: '0.5rem' }}>
+              ⚡ Осталось мало времени
             </WarningMessage>
           )}
-        </CompactCard>
+        </CollapsibleSection>
 
         <ActionsCard>
           <Button onClick={handleSave} disabled={stageOrder.length === 0 || isOverTime || !!titleError || isSaving} size="sm">
-            {isSaving ? '💾 Сохранение...' : '💾 Сохранить план'}
+            {isSaving ? '💾 Сохранение...' : '💾 Сохранить'}
           </Button>
           <Button variant="secondary" onClick={handleClear} disabled={stageOrder.length === 0} size="sm">
-            🗑️ Очистить план
+            🗑️ Очистить
           </Button>
         </ActionsCard>
 
-        <LessonPlansList onPlanSelect={handlePlanSelect} selectedPlanId={selectedPlanId} />
+        <CollapsibleSection title="Сохраненные планы" icon="📚" defaultExpanded={false}>
+          <LessonPlansList onPlanSelect={handlePlanSelect} selectedPlanId={selectedPlanId} />
+        </CollapsibleSection>
 
-        <ImportExportPanel
-          currentPlan={getCurrentPlan()}
-          onPlanImported={handlePlanImported}
-        />
+        <CollapsibleSection title="Импорт/Экспорт" icon="📥" defaultExpanded={false}>
+          <ImportExportPanel
+            currentPlan={getCurrentPlan()}
+            onPlanImported={handlePlanImported}
+          />
+        </CollapsibleSection>
       </Sidebar>
 
       <StageSelectionModal

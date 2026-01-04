@@ -3,7 +3,6 @@ import styled from 'styled-components';
 import { lessonPlansApi } from '../../services/stagesApi';
 import { LessonPlanDto } from '../../types/api';
 import { LessonPlan } from '../../types';
-import { Card } from '../common/Card';
 import { Button } from '../common/Button';
 import { formatDuration } from '../../utils/timeFormat';
 
@@ -12,68 +11,46 @@ interface LessonPlansListProps {
   selectedPlanId?: string | null;
 }
 
-const PlansListContainer = styled(Card)`
+const PlansListContainer = styled.div`
   display: flex;
   flex-direction: column;
-  gap: ${({ theme }) => theme.spacing.md};
-  padding: ${({ theme }) => theme.spacing.md} !important;
-  max-height: 500px;
+  gap: ${({ theme }) => theme.spacing.sm};
+  max-height: 400px;
   overflow-y: auto;
   width: 100%;
   box-sizing: border-box;
-
-  @media (min-width: ${({ theme }) => theme.breakpoints.desktop}) {
-    padding: ${({ theme }) => theme.spacing.xl} !important;
-    gap: ${({ theme }) => theme.spacing.lg};
-    max-height: 700px;
-    min-height: 400px;
-  }
 `;
 
 const PlansListHeader = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: ${({ theme }) => theme.spacing.sm};
-
-  @media (min-width: ${({ theme }) => theme.breakpoints.desktop}) {
-    margin-bottom: ${({ theme }) => theme.spacing.md};
-  }
+  margin-bottom: ${({ theme }) => theme.spacing.xs};
 `;
 
 const PlansListTitle = styled.h3`
-  font-size: 1rem;
+  font-size: 0.875rem;
   font-weight: 600;
   color: ${({ theme }) => theme.colors.dark};
   margin: 0;
   flex: 1;
-
-  @media (min-width: ${({ theme }) => theme.breakpoints.desktop}) {
-    font-size: 1.25rem;
-  }
 `;
 
 const PlanItem = styled.div<{ $isSelected: boolean }>`
-  padding: ${({ theme }) => theme.spacing.md};
-  border: 2px solid ${({ theme, $isSelected }) => ($isSelected ? theme.colors.primary : theme.colors.gray)};
+  padding: ${({ theme }) => theme.spacing.sm} ${({ theme }) => theme.spacing.md};
+  border: 1px solid ${({ theme, $isSelected }) => ($isSelected ? theme.colors.primary : theme.colors.gray)};
   border-radius: ${({ theme }) => theme.borderRadius.md};
   background: ${({ theme, $isSelected }) => ($isSelected ? 'rgba(99, 102, 241, 0.05)' : theme.colors.white)};
   cursor: pointer;
   transition: all ${({ theme }) => theme.transitions.normal};
-  margin-bottom: ${({ theme }) => theme.spacing.sm};
+  margin-bottom: ${({ theme }) => theme.spacing.xs};
   width: 100%;
 
   &:hover {
     border-color: ${({ theme }) => theme.colors.primary};
     background: rgba(99, 102, 241, 0.05);
     transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  }
-
-  @media (min-width: ${({ theme }) => theme.breakpoints.desktop}) {
-    padding: ${({ theme }) => theme.spacing.lg} ${({ theme }) => theme.spacing.xl};
-    margin-bottom: ${({ theme }) => theme.spacing.md};
-    border-width: 2px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   }
 `;
 
@@ -81,41 +58,24 @@ const PlanItemTitle = styled.div`
   font-weight: 600;
   color: ${({ theme }) => theme.colors.dark};
   margin-bottom: ${({ theme }) => theme.spacing.xs};
-  font-size: 0.9375rem;
-  line-height: 1.4;
-
-  @media (min-width: ${({ theme }) => theme.breakpoints.desktop}) {
-    font-size: 1rem;
-    margin-bottom: ${({ theme }) => theme.spacing.sm};
-    line-height: 1.5;
-  }
+  font-size: 0.8125rem;
+  line-height: 1.3;
 `;
 
 const PlanItemMeta = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.875rem;
-  color: ${({ theme }) => theme.colors.secondary};
-  margin-top: ${({ theme }) => theme.spacing.xs};
-  gap: ${({ theme }) => theme.spacing.sm};
-
-  @media (min-width: ${({ theme }) => theme.breakpoints.desktop}) {
-    font-size: 0.9375rem;
-    margin-top: ${({ theme }) => theme.spacing.sm};
-    gap: ${({ theme }) => theme.spacing.md};
-  }
-`;
-
-const PlanItemDate = styled.div`
   font-size: 0.75rem;
   color: ${({ theme }) => theme.colors.secondary};
   margin-top: ${({ theme }) => theme.spacing.xs};
+  gap: ${({ theme }) => theme.spacing.xs};
+`;
 
-  @media (min-width: ${({ theme }) => theme.breakpoints.desktop}) {
-    font-size: 0.8125rem;
-    margin-top: ${({ theme }) => theme.spacing.sm};
-  }
+const PlanItemDate = styled.div`
+  font-size: 0.6875rem;
+  color: ${({ theme }) => theme.colors.secondary};
+  margin-top: ${({ theme }) => theme.spacing.xs};
 `;
 
 const EmptyState = styled.div`
@@ -220,8 +180,8 @@ export const LessonPlansList: React.FC<LessonPlansListProps> = ({ onPlanSelect, 
   return (
     <PlansListContainer>
       <PlansListHeader>
-        <PlansListTitle>📚 Сохраненные планы</PlansListTitle>
-        <RefreshButton variant="secondary" size="sm" onClick={loadPlans} disabled={isLoading}>
+        <PlansListTitle>Планы</PlansListTitle>
+        <RefreshButton variant="secondary" size="sm" onClick={loadPlans} disabled={isLoading} style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}>
           🔄
         </RefreshButton>
       </PlansListHeader>
