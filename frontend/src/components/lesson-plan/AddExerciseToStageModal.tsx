@@ -1,16 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
-import { LessonStage } from '../../types';
+import { LessonStage, Exercise, LESSON_DURATION } from '../../types';
 import { Button } from '../common/Button';
-import { Select } from '../common/Select';
 import { Card } from '../common/Card';
 import { formatDuration } from '../../utils/timeFormat';
+import { canAddExercise } from '../../utils/lessonPlan';
 
 interface AddExerciseToStageModalProps {
   stage: LessonStage;
   isOpen: boolean;
   onClose: () => void;
   onSelect: (exerciseId: string) => void;
+  totalDuration: number;
 }
 
 const ModalOverlay = styled.div<{ $isOpen: boolean }>`
@@ -84,22 +85,80 @@ const StageInfo = styled.div`
   font-weight: 500;
 `;
 
-const ExerciseInfoWrapper = styled.div`
-  padding: ${({ theme }) => theme.spacing.sm};
-  background-color: ${({ theme }) => theme.colors.lightGray};
-  border-radius: ${({ theme }) => theme.borderRadius.md};
-  border-left: 3px solid ${({ theme }) => theme.colors.primary};
+const Label = styled.label`
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: ${({ theme }) => theme.colors.dark};
+  margin-bottom: ${({ theme }) => theme.spacing.xs};
+  display: block;
 `;
 
-const ExerciseInfo = styled.div`
+const ExerciseList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: ${({ theme }) => theme.spacing.xs};
+  max-height: 300px;
+  overflow-y: auto;
+`;
+
+const ExerciseItem = styled.button<{ $canAdd: boolean; $isSelected: boolean; $isLowTime: boolean }>`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: ${({ theme }) => theme.spacing.sm} ${({ theme }) => theme.spacing.md};
+  border: 2px solid ${({ theme, $canAdd, $isSelected, $isLowTime }) => {
+    if ($isSelected) return theme.colors.primary;
+    if (!$canAdd) return theme.colors.danger;
+    if ($isLowTime) return theme.colors.warning;
+    return theme.colors.gray;
+  }};
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  background-color: ${({ theme, $canAdd, $isSelected, $isLowTime }) => {
+    if ($isSelected) return 'rgba(99, 102, 241, 0.1)';
+    if (!$canAdd) return 'rgba(239, 68, 68, 0.05)';
+    if ($isLowTime) return 'rgba(245, 158, 11, 0.05)';
+    return theme.colors.white;
+  }};
+  color: ${({ theme, $canAdd }) => ($canAdd ? theme.colors.dark : theme.colors.secondary)};
+  cursor: ${({ $canAdd }) => ($canAdd ? 'pointer' : 'not-allowed')};
+  transition: all 0.2s ease;
+  text-align: left;
   font-size: 0.875rem;
-  color: ${({ theme }) => theme.colors.dark};
-  font-weight: 500;
+  font-weight: ${({ $isSelected }) => ($isSelected ? 600 : 500)};
   
-  span {
-    color: ${({ theme }) => theme.colors.primary};
-    font-weight: 600;
+  &:hover {
+    background-color: ${({ theme, $canAdd, $isSelected }) => {
+      if (!$canAdd) return 'rgba(239, 68, 68, 0.1)';
+      if ($isSelected) return 'rgba(99, 102, 241, 0.15)';
+      return theme.colors.lightGray;
+    }};
   }
+  
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+`;
+
+const ExerciseName = styled.span`
+  flex: 1;
+  margin-right: ${({ theme }) => theme.spacing.sm};
+`;
+
+const ExerciseDuration = styled.span<{ $canAdd: boolean; $isLowTime: boolean }>`
+  font-size: 0.8125rem;
+  color: ${({ theme, $canAdd, $isLowTime }) => {
+    if (!$canAdd) return theme.colors.danger;
+    if ($isLowTime) return theme.colors.warning;
+    return theme.colors.primary;
+  }};
+  font-weight: 600;
+  white-space: nowrap;
+`;
+
+const ExerciseStatusIcon = styled.span<{ $canAdd: boolean; $isLowTime: boolean }>`
+  margin-left: ${({ theme }) => theme.spacing.xs};
+  font-size: 0.875rem;
 `;
 
 const ModalActions = styled.div`
@@ -114,17 +173,38 @@ export const AddExerciseToStageModal: React.FC<AddExerciseToStageModalProps> = (
   isOpen,
   onClose,
   onSelect,
+  totalDuration,
 }) => {
   const [selectedExerciseId, setSelectedExerciseId] = useState<string>('');
 
   const selectedExercise = stage.exercises.find((e) => e.id === selectedExerciseId);
 
+  const canAddExerciseToPlan = (exercise: Exercise): boolean => {
+    return canAddExercise(totalDuration, exercise.duration, LESSON_DURATION);
+  };
+
+  const isLowTime = (exercise: Exercise): boolean => {
+    const remainingTime = LESSON_DURATION - totalDuration;
+    const threshold = 600; // 10 минут
+    return canAddExerciseToPlan(exercise) && (remainingTime - exercise.duration) < threshold;
+  };
+
+  const handleExerciseSelect = (exerciseId: string) => {
+    const exercise = stage.exercises.find((e) => e.id === exerciseId);
+    if (exercise && canAddExerciseToPlan(exercise)) {
+      setSelectedExerciseId(exerciseId);
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (selectedExerciseId) {
-      onSelect(selectedExerciseId);
-      setSelectedExerciseId('');
-      onClose();
+      const exercise = stage.exercises.find((e) => e.id === selectedExerciseId);
+      if (exercise && canAddExerciseToPlan(exercise)) {
+        onSelect(selectedExerciseId);
+        setSelectedExerciseId('');
+        onClose();
+      }
     }
   };
 
@@ -147,30 +227,42 @@ export const AddExerciseToStageModal: React.FC<AddExerciseToStageModalProps> = (
             <StageInfo>
               Стадия: <strong>{stage.name}</strong>
             </StageInfo>
-            <Select
-              label="Упражнение"
-              options={stage.exercises.map((exercise) => ({
-                value: exercise.id,
-                label: exercise.name,
-              }))}
-              value={selectedExerciseId}
-              onChange={(e) => setSelectedExerciseId(e.target.value)}
-              required
-              autoFocus
-            />
-            {selectedExercise && (
-              <ExerciseInfoWrapper>
-                <ExerciseInfo>
-                  ⏱️ Длительность: <span>{formatDuration(selectedExercise.duration)}</span>
-                </ExerciseInfo>
-              </ExerciseInfoWrapper>
-            )}
+            <div>
+              <Label>Упражнение</Label>
+              <ExerciseList>
+                {stage.exercises.map((exercise) => {
+                  const canAdd = canAddExerciseToPlan(exercise);
+                  const lowTime = isLowTime(exercise);
+                  const isSelected = selectedExerciseId === exercise.id;
+                  
+                  return (
+                    <ExerciseItem
+                      key={exercise.id}
+                      type="button"
+                      $canAdd={canAdd}
+                      $isSelected={isSelected}
+                      $isLowTime={lowTime}
+                      onClick={() => handleExerciseSelect(exercise.id)}
+                      disabled={!canAdd}
+                    >
+                      <ExerciseName>{exercise.name}</ExerciseName>
+                      <ExerciseDuration $canAdd={canAdd} $isLowTime={lowTime}>
+                        {formatDuration(exercise.duration)}
+                      </ExerciseDuration>
+                      <ExerciseStatusIcon $canAdd={canAdd} $isLowTime={lowTime}>
+                        {!canAdd ? '🚫' : lowTime ? '⚠️' : '✓'}
+                      </ExerciseStatusIcon>
+                    </ExerciseItem>
+                  );
+                })}
+              </ExerciseList>
+            </div>
           </ModalBody>
           <ModalActions>
             <Button type="button" variant="secondary" onClick={handleClose}>
               Отмена
             </Button>
-            <Button type="submit" disabled={!selectedExerciseId}>
+            <Button type="submit" disabled={!selectedExerciseId || !selectedExercise || !canAddExerciseToPlan(selectedExercise)}>
               Добавить
             </Button>
           </ModalActions>

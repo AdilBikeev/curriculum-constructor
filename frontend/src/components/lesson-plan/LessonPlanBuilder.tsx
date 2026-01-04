@@ -996,6 +996,7 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
             setAddExerciseToStageModalStageId(null);
           }}
           onSelect={handleAddExerciseToStageFromModal}
+          totalDuration={totalDuration}
         />
       )}
     </BuilderContainer>
