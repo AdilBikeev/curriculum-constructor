@@ -193,7 +193,7 @@ export const LessonPlanItemComponent: React.FC<LessonPlanItemProps> = ({
               }
             }}
             title="Переместить вверх"
-            style={{ minWidth: '32px', padding: '4px 8px', zIndex: 10, position: 'relative' }}
+            style={{ minWidth: '48px', padding: '8px 16px', fontSize: '1.1rem', zIndex: 10, position: 'relative' }}
           >
             ↑
           </Button>
@@ -210,7 +210,7 @@ export const LessonPlanItemComponent: React.FC<LessonPlanItemProps> = ({
               }
             }}
             title="Переместить вниз"
-            style={{ minWidth: '32px', padding: '4px 8px', zIndex: 10, position: 'relative' }}
+            style={{ minWidth: '48px', padding: '8px 16px', fontSize: '1.1rem', zIndex: 10, position: 'relative' }}
           >
             ↓
           </Button>
@@ -226,7 +226,7 @@ export const LessonPlanItemComponent: React.FC<LessonPlanItemProps> = ({
                 onRemove(item.id);
               }
             }}
-            style={{ minWidth: '32px', padding: '4px 8px', zIndex: 10, position: 'relative' }}
+            style={{ minWidth: '48px', padding: '8px 16px', fontSize: '1.1rem', zIndex: 10, position: 'relative' }}
           >
             ✕
           </Button>

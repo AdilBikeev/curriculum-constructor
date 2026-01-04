@@ -413,8 +413,10 @@ export const StageManager: React.FC<StageManagerProps> = ({
                   size="sm"
                   onClick={() => handleDeleteStage(stage.id)}
                   disabled={isProcessing[`delete-stage-${stage.id}`]}
+                  title="Удалить стадию"
+                  style={{ minWidth: '48px', padding: '8px 16px', fontSize: '1.1rem' }}
                 >
-                  {isProcessing[`delete-stage-${stage.id}`] ? 'Удаление...' : 'Удалить стадию'}
+                  {isProcessing[`delete-stage-${stage.id}`] ? '...' : '✕'}
                 </Button>
               </StageHeaderActions>
             </StageHeader>
@@ -506,16 +508,20 @@ export const StageManager: React.FC<StageManagerProps> = ({
                           variant="secondary"
                           onClick={() => handleStartEdit(exercise)}
                           disabled={isProcessing[`delete-exercise-${exercise.id}`]}
+                          title="Редактировать"
+                          style={{ minWidth: '48px', padding: '8px 16px', fontSize: '1.1rem' }}
                         >
-                          Редактировать
+                          ✏️
                         </Button>
                         <Button
                           size="sm"
                           variant="danger"
                           onClick={() => handleDeleteExercise(stage.id, exercise.id)}
                           disabled={isProcessing[`delete-exercise-${exercise.id}`]}
+                          title="Удалить"
+                          style={{ minWidth: '48px', padding: '8px 16px', fontSize: '1.1rem' }}
                         >
-                          {isProcessing[`delete-exercise-${exercise.id}`] ? 'Удаление...' : 'Удалить'}
+                          {isProcessing[`delete-exercise-${exercise.id}`] ? '...' : '✕'}
                         </Button>
                       </ExerciseActionsWrapper>
                     )}
