@@ -61,12 +61,10 @@ const Sidebar = styled.div`
   position: sticky;
   top: ${({ theme }) => theme.spacing.lg};
   height: fit-content;
-  max-height: calc(100vh - 120px);
-  overflow-y: auto;
+  align-items: stretch;
 
   @media (max-width: ${({ theme }) => theme.breakpoints.desktop}) {
     position: static;
-    max-height: none;
   }
 `;
 

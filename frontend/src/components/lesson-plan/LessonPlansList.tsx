@@ -15,8 +15,6 @@ const PlansListContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: ${({ theme }) => theme.spacing.sm};
-  max-height: 400px;
-  overflow-y: auto;
   width: 100%;
   box-sizing: border-box;
 `;

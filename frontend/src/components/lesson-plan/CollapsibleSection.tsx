@@ -45,10 +45,11 @@ const ToggleIcon = styled.span<{ $isExpanded: boolean }>`
 `;
 
 const SectionContent = styled.div<{ $isExpanded: boolean }>`
-  max-height: ${({ $isExpanded }) => ($isExpanded ? '2000px' : '0')};
+  max-height: ${({ $isExpanded }) => ($isExpanded ? 'none' : '0')};
   overflow: hidden;
-  transition: max-height ${({ theme }) => theme.transitions.normal};
+  transition: opacity ${({ theme }) => theme.transitions.normal};
   opacity: ${({ $isExpanded }) => ($isExpanded ? 1 : 0)};
+  display: ${({ $isExpanded }) => ($isExpanded ? 'block' : 'none')};
 `;
 
 export const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
