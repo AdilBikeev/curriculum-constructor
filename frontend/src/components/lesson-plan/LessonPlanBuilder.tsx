@@ -206,25 +206,24 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
   const [isSaving, setIsSaving] = useState(false);
   const [expandedStages, setExpandedStages] = useState<Set<string>>(new Set());
   const [planStageOrder, setPlanStageOrder] = useState<string[]>([]);
-  const [lessonStartTime, setLessonStartTime] = useState<string>('14:00');
+  const [lessonStartTime, setLessonStartTime] = useState<string>('14:00:00');
   const [isStageModalOpen, setIsStageModalOpen] = useState(false);
   const [isAddExerciseToStageModalOpen, setIsAddExerciseToStageModalOpen] = useState(false);
   const [stageModalPosition, setStageModalPosition] = useState<'top' | 'bottom'>('bottom');
   const [addExerciseToStageModalStageId, setAddExerciseToStageModalStageId] = useState<string | null>(null);
 
-  // Используем элементы в том порядке, в котором они были установлены пользователем
-  const sortedItems = useMemo(() => {
-    return [...items];
-  }, [items]);
-
   // Группируем элементы по стадиям
   const groupedByStage = useMemo(() => {
     const groups: { [stageId: string]: LessonPlanItem[] } = {};
-    sortedItems.forEach((item) => {
+    items.forEach((item) => {
       if (!groups[item.stageId]) {
         groups[item.stageId] = [];
       }
       groups[item.stageId].push(item);
+    });
+    // Сортируем элементы внутри каждой стадии по order
+    Object.keys(groups).forEach((stageId) => {
+      groups[stageId].sort((a, b) => a.order - b.order);
     });
     // Создаем новые массивы для каждой группы, чтобы React видел изменения
     const newGroups: { [stageId: string]: LessonPlanItem[] } = {};
@@ -232,7 +231,7 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
       newGroups[stageId] = [...groups[stageId]];
     });
     return newGroups;
-  }, [sortedItems]);
+  }, [items]);
 
   // Получаем порядок стадий (объединяем стадии из плана и из items)
   const stageOrder = useMemo(() => {
@@ -248,7 +247,7 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
     });
     
     // Затем добавляем стадии из items, которых еще нет в порядке
-    sortedItems.forEach((item) => {
+    items.forEach((item) => {
       if (!seen.has(item.stageId)) {
         order.push(item.stageId);
         seen.add(item.stageId);
@@ -256,37 +255,42 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
     });
     
     return order;
-  }, [sortedItems, planStageOrder]);
+  }, [items, planStageOrder]);
 
   const totalDuration = useMemo(() => calculateTotalDuration(items), [items]);
   const isOverTime = totalDuration > LESSON_DURATION;
   const isNearLimit = totalDuration > (LESSON_DURATION - 600) && totalDuration <= LESSON_DURATION; // 600 секунд = 10 минут
 
-  // Вычисляем время начала для каждого элемента
+  // Вычисляем время начала для каждого элемента в правильном порядке
   const itemStartTimes = useMemo(() => {
     const times: { [itemId: string]: string } = {};
     let currentTime = lessonStartTime;
     
-    sortedItems.forEach((item) => {
-      times[item.id] = currentTime;
-      currentTime = addMinutesToTime(currentTime, item.duration);
+    // Создаем правильный порядок элементов: стадии в порядке stageOrder, внутри каждой - элементы по order
+    stageOrder.forEach((stageId) => {
+      const stageItems = groupedByStage[stageId] || [];
+      stageItems.forEach((item) => {
+        times[item.id] = currentTime;
+        currentTime = addMinutesToTime(currentTime, item.duration);
+      });
     });
     
     return times;
-  }, [sortedItems, lessonStartTime]);
+  }, [stageOrder, groupedByStage, lessonStartTime]);
 
   // Вычисляем время начала для каждой стадии (время начала первого упражнения стадии)
   const stageStartTimes = useMemo(() => {
     const times: { [stageId: string]: string } = {};
     
-    stageOrder.forEach((stageId) => {
+      stageOrder.forEach((stageId) => {
       const stageItems = groupedByStage[stageId] || [];
+      const defaultTime = lessonStartTime.length === 5 ? `${lessonStartTime}:00` : lessonStartTime;
       if (stageItems.length > 0) {
         // Время начала стадии = время начала первого упражнения в стадии
-        times[stageId] = itemStartTimes[stageItems[0].id] || lessonStartTime;
+        times[stageId] = itemStartTimes[stageItems[0].id] || defaultTime;
       } else {
         // Если стадия пустая, вычисляем время начала на основе предыдущих стадий
-        let currentTime = lessonStartTime;
+        let currentTime = defaultTime;
         let found = false;
         for (const prevStageId of stageOrder) {
           if (prevStageId === stageId) {
@@ -462,12 +466,26 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
       const result = moveStageUp(prev, stageId);
       return result;
     });
+    setPlanStageOrder((prev) => {
+      const stageIndex = prev.indexOf(stageId);
+      if (stageIndex <= 0) return prev;
+      const newOrder = [...prev];
+      [newOrder[stageIndex - 1], newOrder[stageIndex]] = [newOrder[stageIndex], newOrder[stageIndex - 1]];
+      return newOrder;
+    });
   }, []);
 
   const handleMoveStageDown = React.useCallback((stageId: string) => {
     setItems((prev) => {
       const result = moveStageDown(prev, stageId);
       return result;
+    });
+    setPlanStageOrder((prev) => {
+      const stageIndex = prev.indexOf(stageId);
+      if (stageIndex < 0 || stageIndex >= prev.length - 1) return prev;
+      const newOrder = [...prev];
+      [newOrder[stageIndex], newOrder[stageIndex + 1]] = [newOrder[stageIndex + 1], newOrder[stageIndex]];
+      return newOrder;
     });
   }, []);
 
@@ -763,8 +781,8 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
           <div style={{ marginBottom: '0.5rem' }}>
             <TimeInput
               label="Начало"
-              value={lessonStartTime}
-              onChange={(value) => setLessonStartTime(value)}
+              value={lessonStartTime.length === 5 ? lessonStartTime : lessonStartTime.substring(0, 5)}
+              onChange={(value) => setLessonStartTime(value.length === 5 ? `${value}:00` : value)}
             />
           </div>
           <TimeIndicator usedTime={totalDuration} />
@@ -784,10 +802,11 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
           <LessonPlansList onPlanSelect={handlePlanSelect} selectedPlanId={selectedPlanId} />
         </CollapsibleSection>
 
-        <CollapsibleSection title="Импорт/Экспорт" icon="📥" defaultExpanded={false}>
+        <CollapsibleSection title="Выгрузка плана" icon="📥" defaultExpanded={false}>
           <ImportExportPanel
-            currentPlan={getCurrentPlan()}
-            onPlanImported={handlePlanImported}
+            items={items}
+            stageOrder={stageOrder}
+            lessonStartTime={lessonStartTime}
           />
         </CollapsibleSection>
       </Sidebar>
