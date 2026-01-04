@@ -6,6 +6,8 @@ import {
   ExerciseDto,
   CreateExerciseRequest,
   UpdateExerciseRequest,
+  LessonPlanDto,
+  CreateLessonPlanRequest,
 } from '../types/api';
 
 const API_VERSION = 'v1';
@@ -126,5 +128,73 @@ export class ExercisesApiService {
   }
 }
 
+/**
+ * Сервис для работы с планами занятий через REST API
+ */
+export class LessonPlansApiService {
+  private readonly baseUrl = `/api/${API_VERSION}/lesson-plans`;
+
+  /**
+   * Получить все планы занятий
+   */
+  async getAll(): Promise<LessonPlanDto[]> {
+    const response = await apiService.get<ApiResponse<LessonPlanDto[]>>(this.baseUrl);
+    if (!response.data.success || !response.data.data) {
+      throw new Error(response.data.message || 'Failed to fetch lesson plans');
+    }
+    return response.data.data;
+  }
+
+  /**
+   * Получить план по ID
+   */
+  async getById(id: string): Promise<LessonPlanDto> {
+    const response = await apiService.get<ApiResponse<LessonPlanDto>>(`${this.baseUrl}/${id}`);
+    if (!response.data.success || !response.data.data) {
+      throw new Error(response.data.message || `Failed to fetch lesson plan with id ${id}`);
+    }
+    return response.data.data;
+  }
+
+  /**
+   * Проверить существование плана с указанным названием
+   */
+  async checkTitle(title: string, excludeId?: string): Promise<boolean> {
+    const params = new URLSearchParams({ title });
+    if (excludeId) {
+      params.append('excludeId', excludeId);
+    }
+    const response = await apiService.get<ApiResponse<{ exists: boolean }>>(
+      `${this.baseUrl}/check-title?${params.toString()}`
+    );
+    if (!response.data.success || response.data.data === undefined) {
+      throw new Error(response.data.message || 'Failed to check title');
+    }
+    return response.data.data.exists;
+  }
+
+  /**
+   * Создать новый план
+   */
+  async create(request: CreateLessonPlanRequest): Promise<LessonPlanDto> {
+    const response = await apiService.post<ApiResponse<LessonPlanDto>>(this.baseUrl, request);
+    if (!response.data.success || !response.data.data) {
+      throw new Error(response.data.message || 'Failed to create lesson plan');
+    }
+    return response.data.data;
+  }
+
+  /**
+   * Удалить план
+   */
+  async delete(id: string): Promise<void> {
+    const response = await apiService.delete<ApiResponse<object>>(`${this.baseUrl}/${id}`);
+    if (!response.data.success) {
+      throw new Error(response.data.message || `Failed to delete lesson plan with id ${id}`);
+    }
+  }
+}
+
 export const stagesApi = new StagesApiService();
 export const exercisesApi = new ExercisesApiService();
+export const lessonPlansApi = new LessonPlansApiService();

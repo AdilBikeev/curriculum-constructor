@@ -33,6 +33,8 @@ public static class DependencyInjection
     {
         services.AddScoped<Application.Interfaces.ILessonStageRepository, Repositories.LessonStageRepository>();
         services.AddScoped<Application.Interfaces.IExerciseRepository, Repositories.ExerciseRepository>();
+        services.AddScoped<Application.Interfaces.ILessonPlanRepository, Repositories.LessonPlanRepository>();
+        services.AddScoped<Application.Interfaces.IRepository<Domain.Entities.LessonPlanItem, string>, Repositories.LessonPlanItemRepository>();
 
         return services;
     }

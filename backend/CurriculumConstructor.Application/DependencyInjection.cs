@@ -31,6 +31,7 @@ public static class DependencyInjection
     {
         services.AddScoped<Services.ILessonStageService, Services.LessonStageService>();
         services.AddScoped<Services.IExerciseService, Services.ExerciseService>();
+        services.AddScoped<Services.ILessonPlanService, Services.LessonPlanService>();
 
         return services;
     }

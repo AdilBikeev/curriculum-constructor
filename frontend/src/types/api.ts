@@ -40,3 +40,36 @@ export interface UpdateExerciseRequest {
   description?: string;
 }
 
+export interface LessonPlanDto {
+  id: string;
+  title: string;
+  totalDuration: number; // в секундах
+  items: LessonPlanItemDto[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface LessonPlanItemDto {
+  id: string;
+  stageId: string;
+  stageName: string;
+  exerciseId: string;
+  exerciseName: string;
+  duration: number; // в секундах
+  order: number;
+}
+
+export interface CreateLessonPlanRequest {
+  title: string;
+  items: CreateLessonPlanItemRequest[];
+}
+
+export interface CreateLessonPlanItemRequest {
+  stageId: string;
+  stageName: string;
+  exerciseId: string;
+  exerciseName: string;
+  duration: number; // в секундах
+  order: number;
+}
+

@@ -25,6 +25,9 @@ import {
   createLessonPlanFromItems,
 } from '../../utils/storage';
 import { ImportExportPanel } from './ImportExportPanel';
+import { LessonPlansList } from './LessonPlansList';
+import { lessonPlansApi } from '../../services/stagesApi';
+import { CreateLessonPlanRequest } from '../../types/api';
 
 interface LessonPlanBuilderProps {
   stages: LessonStage[];
@@ -39,7 +42,7 @@ const BuilderContainer = styled.div`
   gap: ${({ theme }) => theme.spacing.lg};
 
   @media (min-width: ${({ theme }) => theme.breakpoints.desktop}) {
-    grid-template-columns: 1fr 380px;
+    grid-template-columns: 1fr 420px;
     gap: ${({ theme }) => theme.spacing.xl};
   }
 `;
@@ -181,10 +184,14 @@ const WarningMessage = styled.div<{ $isError: boolean }>`
   margin-top: ${({ theme }) => theme.spacing.sm};
 `;
 
+
 export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, onSave, onRefreshStages, onRefreshStageExercises }) => {
   const [items, setItems] = useState<LessonPlanItem[]>([]);
   const [planTitle, setPlanTitle] = useState<string>('');
   const [currentPlanId, setCurrentPlanId] = useState<string | null>(null);
+  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
+  const [titleError, setTitleError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   const [expandedStages, setExpandedStages] = useState<Set<string>>(new Set());
   const [planStageOrder, setPlanStageOrder] = useState<string[]>([]);
   const [lessonStartTime, setLessonStartTime] = useState<string>('14:00');
@@ -452,7 +459,37 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
     });
   }, []);
 
-  const handleSave = () => {
+  const validateTitle = async (title: string, excludeId?: string | null): Promise<boolean> => {
+    if (!title.trim()) {
+      setTitleError('Название плана обязательно');
+      return false;
+    }
+
+    try {
+      const exists = await lessonPlansApi.checkTitle(title, excludeId || undefined);
+      if (exists) {
+        setTitleError('План с таким названием уже существует');
+        return false;
+      }
+      setTitleError(null);
+      return true;
+    } catch (err) {
+      console.error('Error checking title:', err);
+      // В случае ошибки разрешаем сохранение, но предупреждаем
+      setTitleError(null);
+      return true;
+    }
+  };
+
+  const handleTitleChange = (newTitle: string) => {
+    setPlanTitle(newTitle);
+    // Очищаем ошибку при изменении текста, проверка будет только при сохранении
+    if (titleError) {
+      setTitleError(null);
+    }
+  };
+
+  const handleSave = async () => {
     if (items.length === 0) {
       alert('Нечего сохранять! Добавьте упражнения в план урока.');
       return;
@@ -463,19 +500,49 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
       return;
     }
 
-    const plan = createLessonPlanFromItems(items, planTitle || undefined);
-    
-    // Сохраняем ID плана, если он уже существует
-    if (currentPlanId) {
-      plan.id = currentPlanId;
-    } else {
-      setCurrentPlanId(plan.id);
+    if (!planTitle.trim()) {
+      setTitleError('Название плана обязательно');
+      return;
     }
 
-    if (onSave) {
-      onSave(items);
-    } else {
-      alert(`✅ План урока "${plan.title}" готов к экспорту! Используйте панель импорта/экспорта для сохранения.`);
+    // Валидация уникальности названия
+    const isValid = await validateTitle(planTitle, currentPlanId);
+    if (!isValid) {
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const request: CreateLessonPlanRequest = {
+        title: planTitle.trim(),
+        items: items.map((item) => ({
+          stageId: item.stageId,
+          stageName: item.stageName,
+          exerciseId: item.exerciseId,
+          exerciseName: item.exerciseName,
+          duration: item.duration,
+          order: item.order,
+        })),
+      };
+
+      const savedPlan = await lessonPlansApi.create(request);
+      
+      // Очищаем форму и создаем новый план
+      setItems([]);
+      setPlanTitle('');
+      setCurrentPlanId(null);
+      setSelectedPlanId(null);
+      setPlanStageOrder([]);
+      setExpandedStages(new Set());
+      setTitleError(null);
+
+      alert(`✅ План "${savedPlan.title}" успешно сохранен!`);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Не удалось сохранить план';
+      alert(`Ошибка при сохранении: ${errorMessage}`);
+      console.error('Error saving lesson plan:', err);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -484,9 +551,54 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
       setItems([]);
       setPlanTitle('');
       setCurrentPlanId(null);
+      setSelectedPlanId(null);
       setPlanStageOrder([]);
       setExpandedStages(new Set());
+      setTitleError(null);
     }
+  };
+
+  const generateCopyTitle = async (originalTitle: string): Promise<string> => {
+    // Проверяем, есть ли уже планы с таким названием
+    let copyNumber = 1;
+    let newTitle = `${originalTitle} (копия ${copyNumber})`;
+    
+    while (true) {
+      try {
+        const exists = await lessonPlansApi.checkTitle(newTitle);
+        if (!exists) {
+          break;
+        }
+        copyNumber++;
+        newTitle = `${originalTitle} (копия ${copyNumber})`;
+      } catch (err) {
+        // В случае ошибки просто используем текущее название
+        break;
+      }
+    }
+    
+    return newTitle;
+  };
+
+  const handlePlanSelect = async (plan: LessonPlan) => {
+    // Создаем копию плана для редактирования
+    const reorderedItems = reorderItems(plan.items);
+    const copyTitle = await generateCopyTitle(plan.title);
+    
+    setItems(reorderedItems);
+    setPlanTitle(copyTitle);
+    setCurrentPlanId(null); // Новый план, без ID
+    setSelectedPlanId(plan.id); // Сохраняем ID исходного плана для подсветки в списке
+    setTitleError(null);
+    
+    // Восстанавливаем порядок стадий из плана
+    const stageOrderFromPlan = Array.from(
+      new Set(reorderedItems.map((item) => item.stageId))
+    );
+    setPlanStageOrder(stageOrderFromPlan);
+    
+    // Разворачиваем все стадии для редактирования
+    setExpandedStages(new Set(stageOrderFromPlan));
   };
 
   const handlePlanImported = (plan: LessonPlan) => {
@@ -539,19 +651,26 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
         <CompactCard>
           <SectionTitle>📋 План урока</SectionTitle>
           {items.length > 0 && (
-            <PlanTitleInput
-              type="text"
-              placeholder="Название плана урока..."
-              value={planTitle}
-              onChange={(e) => setPlanTitle(e.target.value)}
-            />
+            <>
+              <PlanTitleInput
+                type="text"
+                placeholder="Название плана урока..."
+                value={planTitle}
+                onChange={(e) => handleTitleChange(e.target.value)}
+              />
+              {titleError && (
+                <WarningMessage $isError={true}>
+                  {titleError}
+                </WarningMessage>
+              )}
+            </>
           )}
           {stageOrder.length === 0 ? (
             <EmptyState>
               <EmptyIcon>📝</EmptyIcon>
               <EmptyTitle>План урока пуст</EmptyTitle>
               <EmptyDescription>
-                Нажмите кнопку "Добавить стадию" ниже, чтобы начать формировать план
+                Нажмите кнопку "Добавить стадию" ниже, чтобы начать формировать план, или выберите сохраненный план из списка справа
               </EmptyDescription>
               <AddStageButton onClick={() => handleAddStageClick('bottom')} disabled={isOverTime} />
             </EmptyState>
@@ -616,13 +735,15 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
         </CompactCard>
 
         <ActionsCard>
-          <Button onClick={handleSave} disabled={stageOrder.length === 0 || isOverTime} size="sm">
-            💾 Сохранить план
+          <Button onClick={handleSave} disabled={stageOrder.length === 0 || isOverTime || !!titleError || isSaving} size="sm">
+            {isSaving ? '💾 Сохранение...' : '💾 Сохранить план'}
           </Button>
           <Button variant="secondary" onClick={handleClear} disabled={stageOrder.length === 0} size="sm">
             🗑️ Очистить план
           </Button>
         </ActionsCard>
+
+        <LessonPlansList onPlanSelect={handlePlanSelect} selectedPlanId={selectedPlanId} />
 
         <ImportExportPanel
           currentPlan={getCurrentPlan()}

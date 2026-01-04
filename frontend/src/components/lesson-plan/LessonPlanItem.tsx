@@ -8,11 +8,12 @@ import { formatDuration } from '../../utils/timeFormat';
 interface LessonPlanItemProps {
   item: LessonPlanItemType;
   startTime?: string;
-  onRemove: (id: string) => void;
+  onRemove?: (id: string) => void;
   onMoveUp?: (id: string) => void;
   onMoveDown?: (id: string) => void;
   canMoveUp?: boolean;
   canMoveDown?: boolean;
+  isReadOnly?: boolean;
 }
 
 const ItemCard = styled(Card)`
@@ -163,6 +164,7 @@ export const LessonPlanItemComponent: React.FC<LessonPlanItemProps> = ({
   onMoveDown,
   canMoveUp = false,
   canMoveDown = false,
+  isReadOnly = false,
 }) => {
   return (
     <ItemCard>
@@ -177,8 +179,9 @@ export const LessonPlanItemComponent: React.FC<LessonPlanItemProps> = ({
           </ItemSubtitle>
         </ItemInfo>
       </ItemContent>
-      <ItemActions>
-        {onMoveUp && canMoveUp && (
+      {!isReadOnly && (
+        <ItemActions>
+          {onMoveUp && canMoveUp && (
           <Button 
             variant="secondary" 
             size="sm" 
@@ -212,19 +215,24 @@ export const LessonPlanItemComponent: React.FC<LessonPlanItemProps> = ({
             ↓
           </Button>
         )}
-        <Button 
-          variant="danger" 
-          size="sm" 
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            onRemove(item.id);
-          }}
-          style={{ minWidth: '32px', padding: '4px 8px', zIndex: 10, position: 'relative' }}
-        >
-          ✕
-        </Button>
-      </ItemActions>
+        {onRemove && (
+          <Button 
+            variant="danger" 
+            size="sm" 
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (onRemove) {
+                onRemove(item.id);
+              }
+            }}
+            style={{ minWidth: '32px', padding: '4px 8px', zIndex: 10, position: 'relative' }}
+          >
+            ✕
+          </Button>
+        )}
+        </ItemActions>
+      )}
     </ItemCard>
   );
 };

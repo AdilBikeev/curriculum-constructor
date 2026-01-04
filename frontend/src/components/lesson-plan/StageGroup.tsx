@@ -12,7 +12,7 @@ interface StageGroupProps {
   items: LessonPlanItem[];
   stageStartTime: string;
   itemStartTimes: { [itemId: string]: string };
-  onRemoveItem: (id: string) => void;
+  onRemoveItem?: (id: string) => void;
   onMoveExerciseUp?: (id: string) => void;
   onMoveExerciseDown?: (id: string) => void;
   onMoveStageUp?: (stageId: string) => void;
@@ -22,6 +22,7 @@ interface StageGroupProps {
   isExpanded?: boolean;
   onToggleExpand?: (stageId: string) => void;
   onAddExercise?: (stageId: string) => void;
+  isReadOnly?: boolean;
 }
 
 const StageGroupCard = styled(Card)`
@@ -200,6 +201,7 @@ export const StageGroup: React.FC<StageGroupProps> = ({
   isExpanded = false,
   onToggleExpand,
   onAddExercise,
+  isReadOnly = false,
 }) => {
   const stageDuration = items.reduce((sum, item) => sum + item.duration, 0);
   // Используем элементы в исходном порядке (без сортировки)
@@ -240,7 +242,7 @@ export const StageGroup: React.FC<StageGroupProps> = ({
             e.stopPropagation();
           }}
         >
-          {onMoveStageUp && canMoveStageUp && (
+          {!isReadOnly && onMoveStageUp && canMoveStageUp && (
             <Button
               variant="secondary"
               size="sm"
@@ -257,7 +259,7 @@ export const StageGroup: React.FC<StageGroupProps> = ({
               ↑↑
             </Button>
           )}
-          {onMoveStageDown && canMoveStageDown && (
+          {!isReadOnly && onMoveStageDown && canMoveStageDown && (
             <Button
               variant="secondary"
               size="sm"
@@ -282,21 +284,24 @@ export const StageGroup: React.FC<StageGroupProps> = ({
             key={item.id}
             item={item}
             startTime={itemStartTimes[item.id]}
-            onRemove={onRemoveItem}
-            onMoveUp={onMoveExerciseUp}
-            onMoveDown={onMoveExerciseDown}
+            onRemove={isReadOnly ? undefined : onRemoveItem}
+            onMoveUp={isReadOnly ? undefined : onMoveExerciseUp}
+            onMoveDown={isReadOnly ? undefined : onMoveExerciseDown}
             canMoveUp={getExerciseCanMoveUp(index)}
             canMoveDown={getExerciseCanMoveDown(index)}
+            isReadOnly={isReadOnly}
           />
         ))}
-        {isExpanded && onAddExercise && (
+        {isExpanded && !isReadOnly && onAddExercise && (
           <AddExerciseButton
             variant="secondary"
             size="sm"
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              onAddExercise(stageId);
+              if (onAddExercise) {
+                onAddExercise(stageId);
+              }
             }}
           >
             ➕ Добавить упражнение
