@@ -103,6 +103,61 @@ internal class LessonPlanService : ILessonPlanService
         return LessonPlanConverter.ToDto(plan, items);
     }
 
+    public async Task<LessonPlanDto> UpdateAsync(string id, UpdateLessonPlanRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(id);
+        ArgumentNullException.ThrowIfNull(request);
+
+        var plan = await _planRepository.GetByIdAsync(id);
+        if (plan == null)
+        {
+            throw new NotFoundException($"Plan with id {id} not found");
+        }
+
+        // Проверяем уникальность названия (исключая текущий план)
+        var exists = await _planRepository.ExistsByTitleAsync(request.Title, id);
+        if (exists)
+        {
+            throw new ValidationException($"План с названием '{request.Title}' уже существует", (IReadOnlyDictionary<string, IReadOnlyCollection<string>>?)null);
+        }
+
+        // Вычисляем общую длительность
+        var totalDuration = request.Items.Sum(item => item.Duration);
+
+        var updatedPlan = plan with
+        {
+            Title = request.Title,
+            TotalDuration = totalDuration,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        await _planRepository.UpdateAsync(updatedPlan);
+
+        // Удаляем старые элементы
+        await _planRepository.DeleteItemsByPlanIdAsync(id);
+
+        // Создаем новые элементы
+        foreach (var itemRequest in request.Items)
+        {
+            var item = new LessonPlanItem
+            {
+                Id = Guid.NewGuid().ToString(),
+                PlanId = id,
+                StageId = itemRequest.StageId,
+                StageName = itemRequest.StageName,
+                ExerciseId = itemRequest.ExerciseId,
+                ExerciseName = itemRequest.ExerciseName,
+                Duration = itemRequest.Duration,
+                Order = itemRequest.Order
+            };
+
+            await _itemRepository.CreateAsync(item);
+        }
+
+        var items = await _planRepository.GetItemsByPlanIdAsync(id);
+        return LessonPlanConverter.ToDto(updatedPlan, items);
+    }
+
     public async Task<bool> DeleteAsync(string id)
     {
         ArgumentNullException.ThrowIfNull(id);

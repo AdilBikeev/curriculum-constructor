@@ -8,6 +8,7 @@ import {
   UpdateExerciseRequest,
   LessonPlanDto,
   CreateLessonPlanRequest,
+  UpdateLessonPlanRequest,
 } from '../types/api';
 
 const API_VERSION = 'v1';
@@ -180,6 +181,17 @@ export class LessonPlansApiService {
     const response = await apiService.post<ApiResponse<LessonPlanDto>>(this.baseUrl, request);
     if (!response.data.success || !response.data.data) {
       throw new Error(response.data.message || 'Failed to create lesson plan');
+    }
+    return response.data.data;
+  }
+
+  /**
+   * Обновить план (только для Development)
+   */
+  async update(id: string, request: UpdateLessonPlanRequest): Promise<LessonPlanDto> {
+    const response = await apiService.put<ApiResponse<LessonPlanDto>>(`${this.baseUrl}/${id}`, request);
+    if (!response.data.success || !response.data.data) {
+      throw new Error(response.data.message || 'Failed to update lesson plan');
     }
     return response.data.data;
   }

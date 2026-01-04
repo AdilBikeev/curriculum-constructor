@@ -73,3 +73,8 @@ export interface CreateLessonPlanItemRequest {
   order: number;
 }
 
+export interface UpdateLessonPlanRequest {
+  title: string;
+  items: CreateLessonPlanItemRequest[];
+}
+

@@ -133,7 +133,8 @@ export const LessonPlansList: React.FC<LessonPlansListProps> = ({ onPlanSelect, 
     loadPlans();
   }, []);
 
-  const handlePlanClick = (planDto: LessonPlanDto) => {
+  const handlePlanClick = (planDto: LessonPlanDto, event: React.MouseEvent) => {
+    event.stopPropagation();
     const plan = transformDtoToLessonPlan(planDto);
     onPlanSelect(plan);
   };
@@ -170,7 +171,7 @@ export const LessonPlansList: React.FC<LessonPlansListProps> = ({ onPlanSelect, 
             <PlanItem
               key={plan.id}
               $isSelected={selectedPlanId === plan.id}
-              onClick={() => handlePlanClick(plan)}
+              onClick={(e) => handlePlanClick(plan, e)}
             >
               <PlanItemTitle>{plan.title}</PlanItemTitle>
               <PlanItemMeta>

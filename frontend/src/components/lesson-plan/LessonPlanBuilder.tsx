@@ -28,7 +28,9 @@ import { ImportExportPanel } from './ImportExportPanel';
 import { LessonPlansList } from './LessonPlansList';
 import { CollapsibleSection } from './CollapsibleSection';
 import { lessonPlansApi } from '../../services/stagesApi';
-import { CreateLessonPlanRequest } from '../../types/api';
+import { CreateLessonPlanRequest, UpdateLessonPlanRequest } from '../../types/api';
+
+const isDevelopment = process.env.NODE_ENV === 'development';
 
 interface LessonPlanBuilderProps {
   stages: LessonStage[];
@@ -119,6 +121,25 @@ const CompactCard = styled(Card)`
   }
 `;
 
+const ReadOnlyCardWrapper = styled.div<{ $isReadOnly: boolean }>`
+  position: relative;
+  
+  ${({ $isReadOnly }) => $isReadOnly && `
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.02);
+      pointer-events: none;
+      z-index: 1;
+      border-radius: ${({ theme }: any) => theme.borderRadius.lg};
+    }
+  `}
+`;
+
 const SectionTitle = styled.h2`
   font-size: 1.125rem;
   font-weight: 700;
@@ -155,21 +176,24 @@ const PlanTitleRow = styled.div`
   flex-wrap: wrap;
 `;
 
-const PlanTitleInput = styled.input`
+const PlanTitleInput = styled.input<{ $isReadOnly?: boolean }>`
   padding: ${({ theme }) => theme.spacing.sm} ${({ theme }) => theme.spacing.md};
-  border: 2px solid ${({ theme }) => theme.colors.gray};
+  border: 2px solid ${({ theme, $isReadOnly }) => ($isReadOnly ? '#d1d5db' : theme.colors.gray)};
   border-radius: ${({ theme }) => theme.borderRadius.md};
   font-size: 0.9375rem;
   font-family: inherit;
   transition: all ${({ theme }) => theme.transitions.normal};
-  background-color: ${({ theme }) => theme.colors.white};
+  background-color: ${({ theme, $isReadOnly }) => ($isReadOnly ? '#f3f4f6' : theme.colors.white)};
+  color: ${({ theme, $isReadOnly }) => ($isReadOnly ? '#6b7280' : theme.colors.dark)};
+  cursor: ${({ $isReadOnly }) => ($isReadOnly ? 'not-allowed' : 'text')};
   flex: 1;
   min-width: 200px;
+  opacity: ${({ $isReadOnly }) => ($isReadOnly ? 0.8 : 1)};
 
   &:focus {
     outline: none;
-    border-color: ${({ theme }) => theme.colors.primary};
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    border-color: ${({ theme, $isReadOnly }) => ($isReadOnly ? '#d1d5db' : theme.colors.primary)};
+    box-shadow: ${({ $isReadOnly }) => ($isReadOnly ? 'none' : '0 0 0 3px rgba(99, 102, 241, 0.1)')};
   }
 `;
 
@@ -197,11 +221,28 @@ const WarningMessage = styled.div<{ $isError: boolean }>`
 `;
 
 
+const ReadOnlyIndicator = styled.div`
+  display: flex;
+  align-items: center;
+  gap: ${({ theme }) => theme.spacing.xs};
+  padding: ${({ theme }) => theme.spacing.sm} ${({ theme }) => theme.spacing.md};
+  background-color: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  color: ${({ theme }) => theme.colors.primary};
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: ${({ theme }) => theme.spacing.sm};
+`;
+
+
 export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, onSave, onRefreshStages, onRefreshStageExercises }) => {
   const [items, setItems] = useState<LessonPlanItem[]>([]);
   const [planTitle, setPlanTitle] = useState<string>('');
   const [currentPlanId, setCurrentPlanId] = useState<string | null>(null);
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
+  const [selectedPlanForActions, setSelectedPlanForActions] = useState<LessonPlan | null>(null);
+  const [planMode, setPlanMode] = useState<'read-only' | 'copy' | 'edit' | null>(null);
   const [titleError, setTitleError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [expandedStages, setExpandedStages] = useState<Set<string>>(new Set());
@@ -543,7 +584,7 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
 
     setIsSaving(true);
     try {
-      const request: CreateLessonPlanRequest = {
+      const requestData = {
         title: planTitle.trim(),
         items: items.map((item) => ({
           stageId: item.stageId,
@@ -555,18 +596,34 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
         })),
       };
 
-      const savedPlan = await lessonPlansApi.create(request);
-      
-      // Очищаем форму и создаем новый план
-      setItems([]);
-      setPlanTitle('');
-      setCurrentPlanId(null);
-      setSelectedPlanId(null);
-      setPlanStageOrder([]);
-      setExpandedStages(new Set());
-      setTitleError(null);
-
-      alert(`✅ План "${savedPlan.title}" успешно сохранен!`);
+      let savedPlan;
+      if (currentPlanId && isDevelopment) {
+        // Обновляем существующий план (только для Development)
+        const updateRequest: UpdateLessonPlanRequest = requestData;
+        savedPlan = await lessonPlansApi.update(currentPlanId, updateRequest);
+        setCurrentPlanId(savedPlan.id);
+        setSelectedPlanId(savedPlan.id);
+        setSelectedPlanForActions(null);
+        setPlanMode(null);
+        alert(`✅ План "${savedPlan.title}" успешно обновлен!`);
+      } else {
+        // Создаем новый план
+        const createRequest: CreateLessonPlanRequest = requestData;
+        savedPlan = await lessonPlansApi.create(createRequest);
+        
+        // Очищаем форму и создаем новый план
+        setItems([]);
+        setPlanTitle('');
+        setCurrentPlanId(null);
+        setSelectedPlanId(null);
+        setSelectedPlanForActions(null);
+        setPlanMode(null);
+        setPlanStageOrder([]);
+        setExpandedStages(new Set());
+        setTitleError(null);
+        
+        alert(`✅ План "${savedPlan.title}" успешно сохранен!`);
+      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Не удалось сохранить план';
       alert(`Ошибка при сохранении: ${errorMessage}`);
@@ -582,6 +639,22 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
       setPlanTitle('');
       setCurrentPlanId(null);
       setSelectedPlanId(null);
+      setSelectedPlanForActions(null);
+      setPlanMode(null);
+      setPlanStageOrder([]);
+      setExpandedStages(new Set());
+      setTitleError(null);
+    }
+  };
+
+  const handleDelete = () => {
+    if (confirm('Вы уверены, что хотите удалить план? Все несохраненные изменения будут потеряны.')) {
+      setItems([]);
+      setPlanTitle('');
+      setCurrentPlanId(null);
+      setSelectedPlanId(null);
+      setSelectedPlanForActions(null);
+      setPlanMode(null);
       setPlanStageOrder([]);
       setExpandedStages(new Set());
       setTitleError(null);
@@ -610,15 +683,50 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
     return newTitle;
   };
 
-  const handlePlanSelect = async (plan: LessonPlan) => {
-    // Создаем копию плана для редактирования
+  const handlePlanSelect = async (plan: LessonPlan, isCopy: boolean = false) => {
     const reorderedItems = reorderItems(plan.items);
-    const copyTitle = await generateCopyTitle(plan.title);
+    
+    if (isCopy) {
+      // Режим копирования - создаем новый план
+      const copyTitle = await generateCopyTitle(plan.title);
+      setItems(reorderedItems);
+      setPlanTitle(copyTitle);
+      setCurrentPlanId(null); // Новый план, без ID
+      setSelectedPlanId(null);
+      setSelectedPlanForActions(null);
+      setPlanMode('copy');
+    } else {
+      // Режим read-only - показываем план только для просмотра
+      setItems(reorderedItems);
+      setPlanTitle(plan.title);
+      setCurrentPlanId(null);
+      setSelectedPlanId(plan.id); // Сохраняем ID исходного плана для подсветки в списке
+      setSelectedPlanForActions(plan); // Сохраняем план для кнопок действий
+      setPlanMode('read-only');
+    }
+    
+    setTitleError(null);
+    
+    // Восстанавливаем порядок стадий из плана
+    const stageOrderFromPlan = Array.from(
+      new Set(reorderedItems.map((item) => item.stageId))
+    );
+    setPlanStageOrder(stageOrderFromPlan);
+    
+    // Разворачиваем все стадии
+    setExpandedStages(new Set(stageOrderFromPlan));
+  };
+
+  const handlePlanEdit = async (plan: LessonPlan) => {
+    // Загружаем план для редактирования (только для Development)
+    const reorderedItems = reorderItems(plan.items);
     
     setItems(reorderedItems);
-    setPlanTitle(copyTitle);
-    setCurrentPlanId(null); // Новый план, без ID
-    setSelectedPlanId(plan.id); // Сохраняем ID исходного плана для подсветки в списке
+    setPlanTitle(plan.title);
+    setCurrentPlanId(plan.id); // Сохраняем ID плана для обновления
+    setSelectedPlanId(plan.id); // Сохраняем ID плана для подсветки в списке
+    setSelectedPlanForActions(null); // Убираем план для кнопок действий в режиме редактирования
+    setPlanMode('edit');
     setTitleError(null);
     
     // Восстанавливаем порядок стадий из плана
@@ -678,51 +786,103 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
   return (
     <BuilderContainer>
       <MainContent>
-        <CompactCard>
-          <SectionTitle>📋 План урока</SectionTitle>
+        <ReadOnlyCardWrapper $isReadOnly={planMode === 'read-only'}>
+          <CompactCard>
+            <SectionTitle>📋 План урока</SectionTitle>
           {items.length > 0 && (
             <PlanTitleSection>
+              {planMode === 'read-only' && (
+                <ReadOnlyIndicator>
+                  👁️ Режим просмотра
+                </ReadOnlyIndicator>
+              )}
               <PlanTitleRow>
                 <PlanTitleInput
                   type="text"
                   placeholder="Название плана урока..."
                   value={planTitle}
                   onChange={(e) => handleTitleChange(e.target.value)}
+                  readOnly={planMode === 'read-only'}
+                  $isReadOnly={planMode === 'read-only'}
                 />
                 <PlanActionsRow>
-                  <Button 
-                    onClick={handleSave} 
-                    disabled={stageOrder.length === 0 || isOverTime || !!titleError || isSaving} 
-                    size="sm"
-                    title={isSaving ? 'Сохранение...' : 'Сохранить план'}
-                    style={{ 
-                      padding: '0.5rem',
-                      minWidth: 'auto',
-                      width: 'auto',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
-                    }}
-                  >
-                    {isSaving ? '⏳' : '💾'}
-                  </Button>
-                  <Button 
-                    variant="secondary" 
-                    onClick={handleClear} 
-                    disabled={stageOrder.length === 0} 
-                    size="sm"
-                    title="Очистить план"
-                    style={{ 
-                      padding: '0.5rem',
-                      minWidth: 'auto',
-                      width: 'auto',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
-                    }}
-                  >
-                    🗑️
-                  </Button>
+                  {planMode === 'read-only' && selectedPlanForActions && (
+                    <>
+                      {isDevelopment && (
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => selectedPlanForActions && handlePlanEdit(selectedPlanForActions)}
+                          title="Редактировать план"
+                          style={{ 
+                            padding: '0.5rem',
+                            minWidth: 'auto',
+                            width: 'auto',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                        >
+                          ✏️
+                        </Button>
+                      )}
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => selectedPlanForActions && handlePlanSelect(selectedPlanForActions, true)}
+                        title="Скопировать план"
+                        style={{ 
+                          padding: '0.5rem',
+                          minWidth: 'auto',
+                          width: 'auto',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
+                      >
+                        📋
+                      </Button>
+                    </>
+                  )}
+                  {(planMode === 'copy' || planMode === 'edit') && (
+                    <>
+                      <Button 
+                        onClick={handleSave} 
+                        disabled={stageOrder.length === 0 || isOverTime || !!titleError || isSaving} 
+                        size="sm"
+                        title={isSaving ? 'Сохранение...' : 'Сохранить план'}
+                        style={{ 
+                          padding: '0.5rem',
+                          minWidth: 'auto',
+                          width: 'auto',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
+                      >
+                        {isSaving ? '⏳' : '💾'}
+                      </Button>
+                      {planMode === 'copy' && (
+                        <Button 
+                          variant="secondary" 
+                          onClick={handleDelete} 
+                          disabled={stageOrder.length === 0} 
+                          size="sm"
+                          title="Удалить план"
+                          style={{ 
+                            padding: '0.5rem',
+                            minWidth: 'auto',
+                            width: 'auto',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                        >
+                          🗑️
+                        </Button>
+                      )}
+                    </>
+                  )}
                 </PlanActionsRow>
               </PlanTitleRow>
               {titleError && (
@@ -743,7 +903,9 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
             </EmptyState>
           ) : (
             <PlanList>
-              <AddStageButton onClick={() => handleAddStageClick('top')} disabled={isOverTime} />
+              {planMode !== 'read-only' && (
+                <AddStageButton onClick={() => handleAddStageClick('top')} disabled={isOverTime} />
+              )}
               {stageOrder.map((stageId) => {
                 const stageItems = groupedByStage[stageId] || [];
                 const stage = stages.find((s) => s.id === stageId);
@@ -767,13 +929,17 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
                     isExpanded={expandedStages.has(stageId)}
                     onToggleExpand={handleToggleStage}
                     onAddExercise={handleAddExerciseToExistingStage}
+                    isReadOnly={planMode === 'read-only'}
                   />
                 );
               })}
-              <AddStageButton onClick={() => handleAddStageClick('bottom')} disabled={isOverTime} />
+              {planMode !== 'read-only' && (
+                <AddStageButton onClick={() => handleAddStageClick('bottom')} disabled={isOverTime} />
+              )}
             </PlanList>
           )}
         </CompactCard>
+        </ReadOnlyCardWrapper>
       </MainContent>
 
       <Sidebar>
@@ -799,7 +965,10 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
         </CollapsibleSection>
 
         <CollapsibleSection title="Сохраненные планы" icon="📚" defaultExpanded={false}>
-          <LessonPlansList onPlanSelect={handlePlanSelect} selectedPlanId={selectedPlanId} />
+          <LessonPlansList 
+            onPlanSelect={handlePlanSelect} 
+            selectedPlanId={selectedPlanId} 
+          />
         </CollapsibleSection>
 
         <CollapsibleSection title="Выгрузка плана" icon="📥" defaultExpanded={false}>

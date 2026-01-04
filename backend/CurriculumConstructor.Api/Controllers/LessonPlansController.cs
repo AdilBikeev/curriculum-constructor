@@ -2,6 +2,7 @@ using CurriculumConstructor.Application.Common;
 using CurriculumConstructor.Application.DTOs.Requests;
 using CurriculumConstructor.Application.DTOs.Responses;
 using CurriculumConstructor.Application.Services;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CurriculumConstructor.Api.Controllers;
@@ -78,6 +79,38 @@ public class LessonPlansController : ControllerBase
         var plan = await _planService.CreateAsync(request);
         return CreatedAtAction(nameof(GetById), new { id = plan.Id }, 
             ApiResponse<LessonPlanDto>.SuccessResponse(plan));
+    }
+
+    /// <summary>
+    /// Обновить план занятия (только для Development среды)
+    /// </summary>
+    [HttpPut("{id}")]
+    [ProducesResponseType(typeof(ApiResponse<LessonPlanDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> Update(string id, [FromBody] UpdateLessonPlanRequest request, [FromServices] IWebHostEnvironment environment)
+    {
+        // Проверка среды - только для Development
+        if (!environment.IsDevelopment())
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, 
+                ApiResponse<object>.ErrorResponse("Update is only available in Development environment"));
+        }
+
+        try
+        {
+            var plan = await _planService.UpdateAsync(id, request);
+            return Ok(ApiResponse<LessonPlanDto>.SuccessResponse(plan));
+        }
+        catch (Domain.Exceptions.NotFoundException ex)
+        {
+            return NotFound(ApiResponse<object>.ErrorResponse(ex.Message));
+        }
+        catch (Domain.Exceptions.ValidationException ex)
+        {
+            return BadRequest(ApiResponse<object>.ErrorResponse(ex.Message));
+        }
     }
 
     /// <summary>
