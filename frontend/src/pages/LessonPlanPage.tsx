@@ -1,10 +1,8 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 import { Container } from '../components/common/Container';
 import { Heading } from '../components/common/Heading';
 import { LessonPlanBuilder } from '../components/lesson-plan/LessonPlanBuilder';
-import { Button } from '../components/common/Button';
 import { useStages } from '../context/StagesContext';
 
 const PageContainer = styled.div`
@@ -35,14 +33,6 @@ const PageDescription = styled.p`
   }
 `;
 
-const AdminLink = styled(Link)`
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  gap: ${({ theme }) => theme.spacing.sm};
-  margin-top: ${({ theme }) => theme.spacing.md};
-`;
-
 const LessonPlanPage: React.FC = () => {
   const { stages, refreshStages, refreshStageExercises } = useStages();
   
@@ -64,9 +54,6 @@ const LessonPlanPage: React.FC = () => {
             библиотеки и формируйте структурированный план с автоматическим контролем времени.
             Общее время занятия: <strong>90 минут (1.5 часа)</strong>.
           </PageDescription>
-          <AdminLink to="/admin">
-            <Button variant="secondary">⚙️ Управление стадиями и упражнениями</Button>
-          </AdminLink>
         </PageHeader>
         <LessonPlanBuilder 
           stages={stages} 
