@@ -1,10 +1,8 @@
 import React from 'react';
 import styled from 'styled-components';
-import { Link } from 'react-router-dom';
 import { Container } from '../components/common/Container';
 import { Heading } from '../components/common/Heading';
 import { StageManager } from '../components/admin/StageManager';
-import { Button } from '../components/common/Button';
 import { useAdminStages } from '../context/AdminStagesContext';
 
 const PageContainer = styled.div`
@@ -42,31 +40,6 @@ const PageDescription = styled.p`
   @media (min-width: ${({ theme }) => theme.breakpoints.tablet}) {
     font-size: 1.125rem;
   }
-`;
-
-const HeaderActions = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: ${({ theme }) => theme.spacing.sm};
-  align-items: stretch;
-  width: 100%;
-
-  @media (min-width: ${({ theme }) => theme.breakpoints.tablet}) {
-    align-items: flex-end;
-    width: auto;
-  }
-
-  button {
-    width: 100%;
-
-    @media (min-width: ${({ theme }) => theme.breakpoints.tablet}) {
-      width: auto;
-    }
-  }
-`;
-
-const BackLink = styled(Link)`
-  text-decoration: none;
 `;
 
 const ErrorMessage = styled.div`
@@ -117,11 +90,6 @@ const AdminPage: React.FC = () => {
               Изменения сохраняются автоматически и будут доступны в конструкторе планов.
             </PageDescription>
           </HeaderContent>
-          <HeaderActions>
-            <BackLink to="/lesson-plan">
-              <Button variant="secondary">← Вернуться к конструктору</Button>
-            </BackLink>
-          </HeaderActions>
         </PageHeader>
         {error && <ErrorMessage>Ошибка: {error}</ErrorMessage>}
         <StageManager
