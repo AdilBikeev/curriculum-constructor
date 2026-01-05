@@ -235,6 +235,134 @@ const ReadOnlyIndicator = styled.div`
   margin-bottom: ${({ theme }) => theme.spacing.sm};
 `;
 
+const FloatingActionButtons = styled.div`
+  position: fixed;
+  bottom: ${({ theme }) => theme.spacing.lg};
+  right: ${({ theme }) => theme.spacing.lg};
+  display: flex;
+  flex-direction: column;
+  gap: ${({ theme }) => theme.spacing.sm};
+  z-index: 999;
+  
+  @media (max-width: ${({ theme }) => theme.breakpoints.desktop}) {
+    bottom: ${({ theme }) => theme.spacing.md};
+    right: ${({ theme }) => theme.spacing.md};
+  }
+`;
+
+const FloatingButton = styled.button<{ $variant: 'plans' | 'export' }>`
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  background: ${({ theme, $variant }) => 
+    $variant === 'plans' 
+      ? theme.colors.gradientPrimary 
+      : theme.colors.success};
+  color: ${({ theme }) => theme.colors.white};
+  font-size: 1.5rem;
+  cursor: pointer;
+  box-shadow: ${({ theme }) => theme.shadows.lg};
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  
+  &:hover {
+    transform: scale(1.1);
+    box-shadow: ${({ theme }) => theme.shadows.xl};
+  }
+  
+  &:active {
+    transform: scale(0.95);
+  }
+  
+  &::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    right: calc(100% + ${({ theme }) => theme.spacing.sm});
+    top: 50%;
+    transform: translateY(-50%);
+    background: ${({ theme }) => theme.colors.dark};
+    color: ${({ theme }) => theme.colors.white};
+    padding: ${({ theme }) => theme.spacing.xs} ${({ theme }) => theme.spacing.sm};
+    border-radius: ${({ theme }) => theme.borderRadius.md};
+    font-size: 0.75rem;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+  
+  &:hover::after {
+    opacity: 1;
+  }
+  
+  @media (max-width: ${({ theme }) => theme.breakpoints.tablet}) {
+    width: 48px;
+    height: 48px;
+    font-size: 1.25rem;
+  }
+`;
+
+const ModalOverlay = styled.div<{ $isOpen: boolean }>`
+  display: ${({ $isOpen }) => ($isOpen ? 'flex' : 'none')};
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: ${({ theme }) => theme.spacing.md};
+  overflow-y: auto;
+`;
+
+const ModalContent = styled(Card)`
+  max-width: 600px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+`;
+
+const ModalHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: ${({ theme }) => theme.spacing.lg};
+`;
+
+const ModalTitle = styled.h3`
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.dark};
+`;
+
+const CloseButton = styled.button`
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: ${({ theme }) => theme.colors.secondary};
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background-color: ${({ theme }) => theme.colors.lightGray};
+  }
+`;
+
 
 export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, onSave, onRefreshStages, onRefreshStageExercises }) => {
   const [items, setItems] = useState<LessonPlanItem[]>([]);
@@ -252,6 +380,8 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
   const [isAddExerciseToStageModalOpen, setIsAddExerciseToStageModalOpen] = useState(false);
   const [stageModalPosition, setStageModalPosition] = useState<'top' | 'bottom'>('bottom');
   const [addExerciseToStageModalStageId, setAddExerciseToStageModalStageId] = useState<string | null>(null);
+  const [isPlansModalOpen, setIsPlansModalOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
   // Группируем элементы по стадиям
   const groupedByStage = useMemo(() => {
@@ -963,21 +1093,6 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
             </WarningMessage>
           )}
         </CollapsibleSection>
-
-        <CollapsibleSection title="Сохраненные планы" icon="📚" defaultExpanded={false}>
-          <LessonPlansList 
-            onPlanSelect={handlePlanSelect} 
-            selectedPlanId={selectedPlanId} 
-          />
-        </CollapsibleSection>
-
-        <CollapsibleSection title="Выгрузка плана" icon="📥" defaultExpanded={false}>
-          <ImportExportPanel
-            items={items}
-            stageOrder={stageOrder}
-            lessonStartTime={lessonStartTime}
-          />
-        </CollapsibleSection>
       </Sidebar>
 
       <StageSelectionModal
@@ -999,6 +1114,66 @@ export const LessonPlanBuilder: React.FC<LessonPlanBuilderProps> = ({ stages, on
           totalDuration={totalDuration}
         />
       )}
+
+      {/* Floating Action Buttons */}
+      <FloatingActionButtons>
+        <FloatingButton
+          $variant="plans"
+          onClick={() => setIsPlansModalOpen(true)}
+          data-tooltip="Сохраненные планы"
+          aria-label="Сохраненные планы"
+        >
+          📚
+        </FloatingButton>
+        <FloatingButton
+          $variant="export"
+          onClick={() => setIsExportModalOpen(true)}
+          data-tooltip="Выгрузка плана"
+          aria-label="Выгрузка плана"
+        >
+          📥
+        </FloatingButton>
+      </FloatingActionButtons>
+
+      {/* Plans Modal */}
+      <ModalOverlay $isOpen={isPlansModalOpen} onClick={() => setIsPlansModalOpen(false)}>
+        <ModalContent onClick={(e) => e?.stopPropagation()}>
+          <ModalHeader>
+            <ModalTitle>📚 Сохраненные планы</ModalTitle>
+            <CloseButton onClick={() => setIsPlansModalOpen(false)} type="button">
+              ×
+            </CloseButton>
+          </ModalHeader>
+          <div style={{ padding: '0 0 1rem 0' }}>
+            <LessonPlansList 
+              onPlanSelect={(plan) => {
+                handlePlanSelect(plan, false);
+                setIsPlansModalOpen(false);
+              }} 
+              selectedPlanId={selectedPlanId} 
+            />
+          </div>
+        </ModalContent>
+      </ModalOverlay>
+
+      {/* Export Modal */}
+      <ModalOverlay $isOpen={isExportModalOpen} onClick={() => setIsExportModalOpen(false)}>
+        <ModalContent onClick={(e) => e?.stopPropagation()}>
+          <ModalHeader>
+            <ModalTitle>📥 Выгрузка плана</ModalTitle>
+            <CloseButton onClick={() => setIsExportModalOpen(false)} type="button">
+              ×
+            </CloseButton>
+          </ModalHeader>
+          <div style={{ padding: '0 0 1rem 0' }}>
+            <ImportExportPanel
+              items={items}
+              stageOrder={stageOrder}
+              lessonStartTime={lessonStartTime}
+            />
+          </div>
+        </ModalContent>
+      </ModalOverlay>
     </BuilderContainer>
   );
 };
