@@ -61,12 +61,17 @@ const Sidebar = styled.div`
   flex-direction: column;
   gap: ${({ theme }) => theme.spacing.md};
   position: sticky;
-  top: ${({ theme }) => theme.spacing.lg};
-  height: fit-content;
+  top: calc(80px + ${({ theme }) => theme.spacing.lg});
+  align-self: flex-start;
+  max-height: calc(100vh - 80px - ${({ theme }) => theme.spacing.lg} * 2);
+  overflow-y: auto;
   align-items: stretch;
 
   @media (max-width: ${({ theme }) => theme.breakpoints.desktop}) {
     position: static;
+    max-height: none;
+    overflow-y: visible;
+    top: auto;
   }
 `;
 
